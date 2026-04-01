@@ -14,7 +14,154 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      event_photos: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          photo_code: string
+          preview_path: string
+          sort_order: number
+          storage_path: string
+          thumbnail_path: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          photo_code: string
+          preview_path: string
+          sort_order?: number
+          storage_path: string
+          thumbnail_path: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          photo_code?: string
+          preview_path?: string
+          sort_order?: number
+          storage_path?: string
+          thumbnail_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_photos_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          created_at: string
+          event_date: string | null
+          id: string
+          name: string
+          price_per_photo: number
+          slug: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_date?: string | null
+          id?: string
+          name: string
+          price_per_photo?: number
+          slug: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_date?: string | null
+          id?: string
+          name?: string
+          price_per_photo?: number
+          slug?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      selection_photos: {
+        Row: {
+          id: string
+          photo_id: string
+          selection_id: string
+        }
+        Insert: {
+          id?: string
+          photo_id: string
+          selection_id: string
+        }
+        Update: {
+          id?: string
+          photo_id?: string
+          selection_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "selection_photos_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "event_photos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "selection_photos_selection_id_fkey"
+            columns: ["selection_id"]
+            isOneToOne: false
+            referencedRelation: "selections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      selections: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          status: string
+          total_photos: number
+          total_price: number
+          updated_at: string
+          whatsapp: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          status?: string
+          total_photos?: number
+          total_price?: number
+          updated_at?: string
+          whatsapp: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          status?: string
+          total_photos?: number
+          total_price?: number
+          updated_at?: string
+          whatsapp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "selections_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
