@@ -6,8 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Save, Upload, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Progress } from '@/components/ui/progress';
-import { createThumbnail, createPreview, generatePhotoCode } from '@/lib/image-compression';
+import BulkPhotoUploader from '@/components/BulkPhotoUploader';
 
 const AdminEventForm = () => {
   const { id } = useParams<{ id: string }>();
