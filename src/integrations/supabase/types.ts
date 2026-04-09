@@ -88,6 +88,36 @@ export type Database = {
         }
         Relationships: []
       }
+      photographer_settings: {
+        Row: {
+          created_at: string
+          default_price_per_photo: number
+          id: string
+          photographer_name: string
+          updated_at: string
+          watermark_text: string
+          whatsapp_number: string
+        }
+        Insert: {
+          created_at?: string
+          default_price_per_photo?: number
+          id?: string
+          photographer_name?: string
+          updated_at?: string
+          watermark_text?: string
+          whatsapp_number?: string
+        }
+        Update: {
+          created_at?: string
+          default_price_per_photo?: number
+          id?: string
+          photographer_name?: string
+          updated_at?: string
+          watermark_text?: string
+          whatsapp_number?: string
+        }
+        Relationships: []
+      }
       selection_photos: {
         Row: {
           id: string
