@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ArrowUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSignedUrls } from '@/hooks/useSignedUrls';
 import GalleryHeader from '@/components/gallery/GalleryHeader';
 import GalleryFilters from '@/components/gallery/GalleryFilters';
 import GalleryBottomBar from '@/components/gallery/GalleryBottomBar';
@@ -43,6 +44,7 @@ const EventGallery = () => {
   const [showSelected, setShowSelected] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const loaderRef = useRef<HTMLDivElement>(null);
+  const { getSignedUrl, fetchSignedUrls } = useSignedUrls();
 
   // Track scroll for "back to top"
   useEffect(() => {
@@ -104,9 +106,13 @@ const EventGallery = () => {
     if (data) {
       setPhotos((prev) => page === 0 ? data : [...prev, ...data]);
       setHasMore(data.length === BATCH_SIZE);
+
+      // Pre-fetch signed URLs for thumbnails + previews
+      const allPaths = data.flatMap((p) => [p.thumbnail_path, p.preview_path]);
+      fetchSignedUrls(allPaths);
     }
     setLoading(false);
-  }, [event, page]);
+  }, [event, page, fetchSignedUrls]);
 
   useEffect(() => {
     if (event) fetchPhotos();
@@ -135,11 +141,6 @@ const EventGallery = () => {
     });
   };
 
-  const getPublicUrl = (path: string) => {
-    const { data } = supabase.storage.from('event-photos').getPublicUrl(path);
-    return data.publicUrl;
-  };
-
   // Parse code range like "A001-A200" or "#A001–#A200"
   const parseCodeRange = (input: string): { start: string; end: string } | null => {
     const cleaned = input.replace(/#/g, '').trim();
@@ -152,7 +153,6 @@ const EventGallery = () => {
   const filteredPhotos = useMemo(() => {
     let result = photos;
 
-    // Search filter
     if (searchCode.trim()) {
       const range = parseCodeRange(searchCode);
       if (range) {
@@ -168,12 +168,10 @@ const EventGallery = () => {
       }
     }
 
-    // Show selected only
     if (showSelected) {
       result = result.filter((p) => selectedIds.has(p.id));
     }
 
-    // Time group filter
     if (selectedTimeGroup !== 'all') {
       result = result.filter((p) => getTimeGroupLabel(p.captured_at) === selectedTimeGroup);
     }
@@ -184,24 +182,20 @@ const EventGallery = () => {
   // Group photos by hour
   const timeGroups = useMemo(() => {
     const groups = new Map<string, Photo[]>();
-    
     filteredPhotos.forEach((photo) => {
       const label = getTimeGroupLabel(photo.captured_at);
       if (!groups.has(label)) groups.set(label, []);
       groups.get(label)!.push(photo);
     });
-
     return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
   }, [filteredPhotos]);
 
-  // All unique time group labels for the filter dropdown
   const allTimeGroupLabels = useMemo(() => {
     const labels = new Set<string>();
     photos.forEach((p) => labels.add(getTimeGroupLabel(p.captured_at)));
     return Array.from(labels).sort();
   }, [photos]);
 
-  // Build flat filtered list for preview navigation
   const flatFiltered = filteredPhotos;
 
   if (loading && photos.length === 0) {
@@ -235,7 +229,6 @@ const EventGallery = () => {
               : 'Nenhuma foto encontrada com esses filtros.'}
           </p>
         ) : timeGroups.length <= 1 ? (
-          /* No grouping needed — flat grid */
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
             {filteredPhotos.map((photo, index) => (
               <PhotoCardWrapper
@@ -245,13 +238,12 @@ const EventGallery = () => {
                 selectedIds={selectedIds}
                 onToggle={toggleSelect}
                 onPreview={setPreviewIndex}
-                getPublicUrl={getPublicUrl}
+                getSignedUrl={getSignedUrl}
                 watermarkText={watermarkText}
               />
             ))}
           </div>
         ) : (
-          /* Time-grouped sections */
           (() => {
             let offset = 0;
             return timeGroups.map(([label, groupPhotos], gi) => {
@@ -265,7 +257,7 @@ const EventGallery = () => {
                   selectedIds={selectedIds}
                   onToggle={toggleSelect}
                   onPreview={setPreviewIndex}
-                  getPublicUrl={getPublicUrl}
+                  getSignedUrl={getSignedUrl}
                   watermarkText={watermarkText}
                   defaultOpen={gi === 0}
                   globalIndexOffset={currentOffset}
@@ -282,7 +274,6 @@ const EventGallery = () => {
         </div>
       </main>
 
-      {/* Scroll to top */}
       {showScrollTop && (
         <Button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -307,14 +298,14 @@ const EventGallery = () => {
           onToggle={toggleSelect}
           onClose={() => setPreviewIndex(null)}
           onNavigate={setPreviewIndex}
-          getPublicUrl={getPublicUrl}
+          getSignedUrl={getSignedUrl}
+          watermarkText={watermarkText}
         />
       )}
     </div>
   );
 };
 
-/* Helper: get time group label from a timestamp */
 function getTimeGroupLabel(capturedAt: string | null): string {
   if (!capturedAt) return 'Sem horário';
   try {
@@ -330,7 +321,6 @@ function getTimeGroupLabel(capturedAt: string | null): string {
   }
 }
 
-/* Inline wrapper to avoid importing PhotoCard directly in this file */
 import PhotoCardComponent from '@/components/gallery/PhotoCard';
 
 function PhotoCardWrapper({
@@ -339,7 +329,7 @@ function PhotoCardWrapper({
   selectedIds,
   onToggle,
   onPreview,
-  getPublicUrl,
+  getSignedUrl,
   watermarkText,
 }: {
   photo: Photo;
@@ -347,7 +337,7 @@ function PhotoCardWrapper({
   selectedIds: Set<string>;
   onToggle: (id: string) => void;
   onPreview: (i: number) => void;
-  getPublicUrl: (p: string) => string;
+  getSignedUrl: (p: string) => string | null;
   watermarkText: string;
 }) {
   return (
@@ -356,7 +346,7 @@ function PhotoCardWrapper({
       isSelected={selectedIds.has(photo.id)}
       onToggle={() => onToggle(photo.id)}
       onPreview={() => onPreview(index)}
-      getPublicUrl={getPublicUrl}
+      signedUrl={getSignedUrl(photo.thumbnail_path)}
       watermarkText={watermarkText}
     />
   );

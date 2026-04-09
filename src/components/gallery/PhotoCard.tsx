@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Heart, Check } from 'lucide-react';
+import ProtectedImage from './ProtectedImage';
 
 interface PhotoCardProps {
   photo: {
@@ -10,11 +11,11 @@ interface PhotoCardProps {
   isSelected: boolean;
   onToggle: () => void;
   onPreview: () => void;
-  getPublicUrl: (path: string) => string;
+  signedUrl: string | null;
   watermarkText: string;
 }
 
-const PhotoCard = ({ photo, isSelected, onToggle, onPreview, getPublicUrl, watermarkText }: PhotoCardProps) => {
+const PhotoCard = ({ photo, isSelected, onToggle, onPreview, signedUrl, watermarkText }: PhotoCardProps) => {
   const [loaded, setLoaded] = useState(false);
   const [visible, setVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -35,27 +36,25 @@ const PhotoCard = ({ photo, isSelected, onToggle, onPreview, getPublicUrl, water
   }, []);
 
   return (
-    <div ref={ref} className="relative aspect-square rounded-lg overflow-hidden bg-muted group">
+    <div
+      ref={ref}
+      className="relative aspect-square rounded-lg overflow-hidden bg-muted group"
+      onContextMenu={(e) => e.preventDefault()}
+      style={{ userSelect: 'none' }}
+    >
       {visible && (
         <>
-          <img
-            src={getPublicUrl(photo.thumbnail_path)}
+          <ProtectedImage
+            src={signedUrl}
             alt={`Foto ${photo.photo_code}`}
-            className={`w-full h-full object-cover cursor-pointer transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
-            loading="lazy"
-            onLoad={() => setLoaded(true)}
+            watermarkText={watermarkText}
+            className="w-full h-full object-cover cursor-pointer"
             onClick={onPreview}
+            onLoad={() => setLoaded(true)}
           />
 
-          {/* Watermark */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-            <span className="text-white/30 font-bold text-lg rotate-[-30deg] tracking-widest">
-              {watermarkText}
-            </span>
-          </div>
-
           {/* Photo code badge */}
-          <div className="absolute top-2 left-2 bg-foreground/70 text-background text-xs font-mono px-2 py-0.5 rounded">
+          <div className="absolute top-2 left-2 bg-foreground/70 text-background text-xs font-mono px-2 py-0.5 rounded pointer-events-none">
             {photo.photo_code}
           </div>
 
