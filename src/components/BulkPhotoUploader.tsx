@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { createThumbnail, createPreview, generatePhotoCode } from '@/lib/image-compression';
+import { extractCapturedAt } from '@/lib/exif-utils';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Upload, X, RotateCcw, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
@@ -58,11 +59,13 @@ const BulkPhotoUploader = ({ eventId, existingPhotoCount, onUploadComplete }: Bu
     const baseName = `${timestamp}_${globalIndex}`;
 
     try {
-      updateItem(globalIndex, { status: 'compressing', progress: 10 });
+      updateItem(globalIndex, { status: 'compressing', progress: 5 });
 
-      const [thumbnail, preview] = await Promise.all([
+      // Extract EXIF in parallel with compression
+      const [thumbnail, preview, capturedAt] = await Promise.all([
         createThumbnail(item.file),
         createPreview(item.file),
+        extractCapturedAt(item.file),
       ]);
 
       updateItem(globalIndex, { status: 'uploading', progress: 30 });
@@ -87,6 +90,7 @@ const BulkPhotoUploader = ({ eventId, existingPhotoCount, onUploadComplete }: Bu
         preview_path: prevRes.data.path,
         photo_code: photoCode,
         sort_order: photoIndex,
+        captured_at: capturedAt || new Date().toISOString(),
       });
 
       if (dbError) throw new Error(dbError.message);
@@ -117,12 +121,11 @@ const BulkPhotoUploader = ({ eventId, existingPhotoCount, onUploadComplete }: Bu
       activeCount.current++;
       let success = await uploadSinglePhoto(item, index);
 
-      // Retry logic
       let retries = 0;
       while (!success && retries < MAX_RETRIES && !abortRef.current) {
         retries++;
         updateItem(index, { retries, status: 'queued', error: undefined });
-        await new Promise(r => setTimeout(r, 1000 * retries)); // exponential-ish backoff
+        await new Promise(r => setTimeout(r, 1000 * retries));
         success = await uploadSinglePhoto(item, index);
       }
 
@@ -131,7 +134,6 @@ const BulkPhotoUploader = ({ eventId, existingPhotoCount, onUploadComplete }: Bu
       processedRef.current++;
     };
 
-    // Process in batches using a pool pattern
     let nextIndex = 0;
     const runNext = async (): Promise<void> => {
       while (nextIndex < items.length && !abortRef.current) {
@@ -190,7 +192,6 @@ const BulkPhotoUploader = ({ eventId, existingPhotoCount, onUploadComplete }: Bu
 
   const handleDragOver = (e: React.DragEvent) => e.preventDefault();
 
-  // Stats
   const doneCount = queue.filter(i => i.status === 'done').length;
   const errorCount = queue.filter(i => i.status === 'error').length;
   const totalCount = queue.length;
@@ -210,12 +211,7 @@ const BulkPhotoUploader = ({ eventId, existingPhotoCount, onUploadComplete }: Bu
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Drop zone */}
-        <div
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          className="relative"
-        >
+        <div onDrop={handleDrop} onDragOver={handleDragOver} className="relative">
           <label
             htmlFor="bulk-photo-upload"
             className="flex flex-col items-center justify-center gap-2 min-h-[100px] border-2 border-dashed border-input rounded-lg cursor-pointer hover:border-primary transition-colors p-6"
@@ -225,7 +221,7 @@ const BulkPhotoUploader = ({ eventId, existingPhotoCount, onUploadComplete }: Bu
               Arraste fotos aqui ou clique para selecionar
             </span>
             <span className="text-xs text-muted-foreground">
-              Suporta milhares de fotos • Upload paralelo
+              Suporta milhares de fotos • Upload paralelo • EXIF automático
             </span>
           </label>
           <input
@@ -233,7 +229,7 @@ const BulkPhotoUploader = ({ eventId, existingPhotoCount, onUploadComplete }: Bu
             type="file"
             accept="image/*"
             multiple
-            // @ts-ignore - webkitdirectory is non-standard but supported
+            // @ts-ignore
             webkitdirectory=""
             onChange={(e) => e.target.files && handleFiles(e.target.files)}
             className="hidden"
@@ -241,7 +237,6 @@ const BulkPhotoUploader = ({ eventId, existingPhotoCount, onUploadComplete }: Bu
           />
         </div>
 
-        {/* Separate button for regular file selection (no folder) */}
         <div className="flex gap-2">
           <label className="flex-1">
             <input
@@ -261,10 +256,8 @@ const BulkPhotoUploader = ({ eventId, existingPhotoCount, onUploadComplete }: Bu
           </label>
         </div>
 
-        {/* Queue summary */}
         {totalCount > 0 && (
           <div className="space-y-3">
-            {/* Overall progress */}
             <div className="space-y-1">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">
@@ -277,7 +270,6 @@ const BulkPhotoUploader = ({ eventId, existingPhotoCount, onUploadComplete }: Bu
               <Progress value={overallProgress} className="h-3" />
             </div>
 
-            {/* Status breakdown */}
             <div className="flex flex-wrap gap-3 text-xs">
               {doneCount > 0 && (
                 <span className="flex items-center gap-1 text-green-600">
@@ -296,7 +288,6 @@ const BulkPhotoUploader = ({ eventId, existingPhotoCount, onUploadComplete }: Bu
               )}
             </div>
 
-            {/* Active uploads detail */}
             {activeItems.length > 0 && (
               <div className="space-y-1 max-h-[120px] overflow-y-auto">
                 {activeItems.map((item, i) => (
@@ -311,7 +302,6 @@ const BulkPhotoUploader = ({ eventId, existingPhotoCount, onUploadComplete }: Bu
               </div>
             )}
 
-            {/* Failed files */}
             {errorCount > 0 && !isUploading && (
               <div className="space-y-1 max-h-[100px] overflow-y-auto bg-destructive/5 rounded-md p-2">
                 {queue.filter(i => i.status === 'error').slice(0, 10).map((item, i) => (
@@ -326,7 +316,6 @@ const BulkPhotoUploader = ({ eventId, existingPhotoCount, onUploadComplete }: Bu
               </div>
             )}
 
-            {/* Action buttons */}
             <div className="flex gap-2">
               {!isUploading && doneCount < totalCount && (
                 <Button onClick={startUpload} className="flex-1 min-h-[44px]">
