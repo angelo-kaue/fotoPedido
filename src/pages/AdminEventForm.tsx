@@ -4,10 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Save, Upload, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from 'sonner';
-import { Progress } from '@/components/ui/progress';
-import { createThumbnail, createPreview, generatePhotoCode } from '@/lib/image-compression';
+import BulkPhotoUploader from '@/components/BulkPhotoUploader';
 
 const AdminEventForm = () => {
   const { id } = useParams<{ id: string }>();
@@ -20,12 +19,6 @@ const AdminEventForm = () => {
   const [pricePerPhoto, setPricePerPhoto] = useState('15.00');
   const [status, setStatus] = useState('active');
   const [saving, setSaving] = useState(false);
-
-  // Upload state
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadTotal, setUploadTotal] = useState(0);
-  const [uploadCurrent, setUploadCurrent] = useState(0);
   const [existingPhotoCount, setExistingPhotoCount] = useState(0);
 
   useEffect(() => {
@@ -113,65 +106,6 @@ const AdminEventForm = () => {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0 || !id || isNew) return;
-
-    setUploading(true);
-    setUploadTotal(files.length);
-    setUploadCurrent(0);
-
-    let startIndex = existingPhotoCount;
-
-    for (let i = 0; i < files.length; i++) {
-      try {
-        const file = files[i];
-        const photoCode = generatePhotoCode(startIndex + i);
-        const timestamp = Date.now();
-        const baseName = `${timestamp}_${i}`;
-
-        // Compress images client-side
-        const [thumbnail, preview] = await Promise.all([
-          createThumbnail(file),
-          createPreview(file),
-        ]);
-
-        // Upload all 3 versions
-        const [origRes, thumbRes, prevRes] = await Promise.all([
-          supabase.storage.from('event-photos').upload(`${id}/originals/${baseName}.jpg`, file, { contentType: 'image/jpeg' }),
-          supabase.storage.from('event-photos').upload(`${id}/thumbnails/${baseName}.jpg`, thumbnail, { contentType: 'image/jpeg' }),
-          supabase.storage.from('event-photos').upload(`${id}/previews/${baseName}.jpg`, preview, { contentType: 'image/jpeg' }),
-        ]);
-
-        if (origRes.error || thumbRes.error || prevRes.error) {
-          throw new Error('Erro no upload de arquivo');
-        }
-
-        // Save photo record
-        await supabase.from('event_photos').insert({
-          event_id: id,
-          storage_path: origRes.data.path,
-          thumbnail_path: thumbRes.data.path,
-          preview_path: prevRes.data.path,
-          photo_code: photoCode,
-          sort_order: startIndex + i,
-        });
-
-        setUploadCurrent(i + 1);
-        setUploadProgress(Math.round(((i + 1) / files.length) * 100));
-      } catch (error) {
-        console.error(`Error uploading file ${i}:`, error);
-        toast.error(`Erro ao enviar foto ${i + 1}`);
-      }
-    }
-
-    setUploading(false);
-    setExistingPhotoCount((prev) => prev + files.length);
-    toast.success(`${files.length} fotos enviadas com sucesso!`);
-    // Reset file input
-    e.target.value = '';
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card py-4">
@@ -186,7 +120,6 @@ const AdminEventForm = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 max-w-lg space-y-6">
-        {/* Event details */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Dados do Evento</CardTitle>
@@ -194,42 +127,20 @@ const AdminEventForm = () => {
           <CardContent className="space-y-4">
             <div>
               <label className="text-sm font-medium text-foreground">Nome</label>
-              <Input
-                value={name}
-                onChange={(e) => handleNameChange(e.target.value)}
-                placeholder="Ex: Formatura Turma 2025"
-                className="min-h-[44px]"
-              />
+              <Input value={name} onChange={(e) => handleNameChange(e.target.value)} placeholder="Ex: Formatura Turma 2025" className="min-h-[44px]" />
             </div>
             <div>
               <label className="text-sm font-medium text-foreground">Slug (URL)</label>
-              <Input
-                value={slug}
-                onChange={(e) => setSlug(e.target.value)}
-                placeholder="formatura-turma-2025"
-                className="min-h-[44px]"
-              />
+              <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="formatura-turma-2025" className="min-h-[44px]" />
               <p className="text-xs text-muted-foreground mt-1">/evento/{slug || '...'}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-foreground">Data do Evento</label>
-              <Input
-                type="date"
-                value={eventDate}
-                onChange={(e) => setEventDate(e.target.value)}
-                className="min-h-[44px]"
-              />
+              <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="min-h-[44px]" />
             </div>
             <div>
               <label className="text-sm font-medium text-foreground">Preço por Foto (R$)</label>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                value={pricePerPhoto}
-                onChange={(e) => setPricePerPhoto(e.target.value)}
-                className="min-h-[44px]"
-              />
+              <Input type="number" step="0.01" min="0" value={pricePerPhoto} onChange={(e) => setPricePerPhoto(e.target.value)} className="min-h-[44px]" />
             </div>
             <div>
               <label className="text-sm font-medium text-foreground">Status</label>
@@ -249,46 +160,12 @@ const AdminEventForm = () => {
           </CardContent>
         </Card>
 
-        {/* Photo upload - only for existing events */}
         {!isNew && id && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">
-                Fotos ({existingPhotoCount})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label
-                  htmlFor="photo-upload"
-                  className="flex items-center justify-center gap-2 min-h-[48px] border-2 border-dashed border-input rounded-lg cursor-pointer hover:border-primary transition-colors p-4"
-                >
-                  <Upload className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-muted-foreground">
-                    Clique para selecionar fotos
-                  </span>
-                </label>
-                <input
-                  id="photo-upload"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  disabled={uploading}
-                />
-              </div>
-
-              {uploading && (
-                <div className="space-y-2">
-                  <Progress value={uploadProgress} className="h-3" />
-                  <p className="text-sm text-muted-foreground text-center">
-                    Enviando {uploadCurrent} de {uploadTotal} fotos... ({uploadProgress}%)
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <BulkPhotoUploader
+            eventId={id}
+            existingPhotoCount={existingPhotoCount}
+            onUploadComplete={(count) => setExistingPhotoCount(prev => prev + count)}
+          />
         )}
       </main>
     </div>
