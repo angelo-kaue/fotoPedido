@@ -97,7 +97,7 @@ const EventGallery = () => {
       .from('event_photos')
       .select('id, photo_code, thumbnail_path, preview_path, captured_at')
       .eq('event_id', event.id)
-      .order('captured_at', { ascending: true, nullsLast: true })
+      .order('captured_at', { ascending: true })
       .order('sort_order')
       .range(from, to);
 
@@ -320,9 +320,11 @@ function getTimeGroupLabel(capturedAt: string | null): string {
   try {
     const date = new Date(capturedAt);
     if (isNaN(date.getTime())) return 'Sem horário';
-    const h = date.getHours();
-    const nextH = h + 1;
-    return `${String(h).padStart(2, '0')}:00 – ${String(nextH).padStart(2, '0')}:00`;
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const h = String(date.getHours()).padStart(2, '0');
+    return `${day}/${month}/${year} - ${h}:00`;
   } catch {
     return 'Sem horário';
   }
