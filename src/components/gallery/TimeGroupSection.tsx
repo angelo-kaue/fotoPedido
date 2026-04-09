@@ -16,7 +16,7 @@ interface TimeGroupSectionProps {
   selectedIds: Set<string>;
   onToggle: (id: string) => void;
   onPreview: (globalIndex: number) => void;
-  getPublicUrl: (path: string) => string;
+  getSignedUrl: (path: string) => string | null;
   watermarkText: string;
   defaultOpen: boolean;
   globalIndexOffset: number;
@@ -28,7 +28,7 @@ const TimeGroupSection = ({
   selectedIds,
   onToggle,
   onPreview,
-  getPublicUrl,
+  getSignedUrl,
   watermarkText,
   defaultOpen,
   globalIndexOffset,
@@ -64,7 +64,7 @@ const TimeGroupSection = ({
               isSelected={selectedIds.has(photo.id)}
               onToggle={() => onToggle(photo.id)}
               onPreview={() => onPreview(globalIndexOffset + i)}
-              getPublicUrl={getPublicUrl}
+              signedUrl={getSignedUrl(photo.thumbnail_path)}
               watermarkText={watermarkText}
             />
           ))}

@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight, Heart, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ProtectedImage from '@/components/gallery/ProtectedImage';
 
 interface Photo {
   id: string;
@@ -15,7 +16,8 @@ interface PhotoPreviewModalProps {
   onToggle: (id: string) => void;
   onClose: () => void;
   onNavigate: (index: number) => void;
-  getPublicUrl: (path: string) => string;
+  getSignedUrl: (path: string) => string | null;
+  watermarkText: string;
 }
 
 const PhotoPreviewModal = ({
@@ -25,7 +27,8 @@ const PhotoPreviewModal = ({
   onToggle,
   onClose,
   onNavigate,
-  getPublicUrl,
+  getSignedUrl,
+  watermarkText,
 }: PhotoPreviewModalProps) => {
   const photo = photos[currentIndex];
   const isSelected = selectedIds.has(photo.id);
@@ -57,7 +60,11 @@ const PhotoPreviewModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-foreground/95 flex flex-col">
+    <div
+      className="fixed inset-0 z-[100] bg-foreground/95 flex flex-col"
+      onContextMenu={(e) => e.preventDefault()}
+      style={{ userSelect: 'none' }}
+    >
       {/* Top bar */}
       <div className="flex items-center justify-between p-4">
         <span className="text-background font-mono text-sm">{photo.photo_code}</span>
@@ -84,18 +91,12 @@ const PhotoPreviewModal = ({
           </button>
         )}
 
-        <div className="relative max-w-full max-h-full">
-          <img
-            src={getPublicUrl(photo.preview_path)}
-            alt={`Foto ${photo.photo_code}`}
-            className="max-h-[70vh] max-w-full object-contain rounded-lg"
-          />
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <span className="text-white/20 font-bold text-3xl rotate-[-30deg] tracking-widest">
-              AMOSTRA
-            </span>
-          </div>
-        </div>
+        <ProtectedImage
+          src={getSignedUrl(photo.preview_path)}
+          alt={`Foto ${photo.photo_code}`}
+          watermarkText={watermarkText}
+          className="max-h-[70vh] max-w-full object-contain rounded-lg"
+        />
 
         {currentIndex < photos.length - 1 && (
           <button
