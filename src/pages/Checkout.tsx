@@ -102,7 +102,15 @@ const Checkout = () => {
         .select('id')
         .single();
 
-      if (selError) throw selError;
+      if (selError) {
+        console.error('Error inserting selection:', selError);
+        throw selError;
+      }
+
+      if (!selection?.id) {
+        console.error('No selection ID returned after insert');
+        throw new Error('Falha ao criar seleção: ID não retornado');
+      }
 
       // Save selected photos
       const photoRows = selectedPhotos.map((p) => ({
