@@ -97,6 +97,7 @@ const EventGallery = () => {
       .from('event_photos')
       .select('id, photo_code, thumbnail_path, preview_path, captured_at')
       .eq('event_id', event.id)
+      .order('captured_at', { ascending: true, nullsLast: true })
       .order('sort_order')
       .range(from, to);
 
