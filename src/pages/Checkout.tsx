@@ -32,29 +32,23 @@ const Checkout = () => {
   useEffect(() => {
     const fetchEvent = async () => {
       if (!slug) return;
-      const { data } = await supabase
-        .from('events')
-        .select('id, name, slug, price_per_photo')
-        .eq('slug', slug)
-        .eq('status', 'active')
-        .single();
-      if (!data) {
+
+      const [{ data: eventData }, { data: settings }] = await Promise.all([
+        supabase.from('events').select('id, name, slug, price_per_photo').eq('slug', slug).eq('status', 'active').single(),
+        supabase.from('photographer_settings').select('whatsapp_number').limit(1).single(),
+      ]);
+
+      if (!eventData) {
         navigate('/');
         return;
       }
-      setEvent(data);
+      setEvent(eventData);
+      if (settings?.whatsapp_number) setPhotographerWa(settings.whatsapp_number);
 
-      // Get selected IDs from localStorage
       const saved = localStorage.getItem(`selection_${slug}`);
-      if (!saved) {
-        navigate(`/evento/${slug}`);
-        return;
-      }
+      if (!saved) { navigate(`/evento/${slug}`); return; }
       const ids: string[] = JSON.parse(saved);
-      if (ids.length === 0) {
-        navigate(`/evento/${slug}`);
-        return;
-      }
+      if (ids.length === 0) { navigate(`/evento/${slug}`); return; }
 
       const { data: photos } = await supabase
         .from('event_photos')
