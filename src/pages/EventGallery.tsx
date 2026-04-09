@@ -32,6 +32,7 @@ const EventGallery = () => {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
+  const [watermarkText, setWatermarkText] = useState('AMOSTRA');
   const loaderRef = useRef<HTMLDivElement>(null);
 
   // Load selections from localStorage
@@ -57,18 +58,17 @@ const EventGallery = () => {
   useEffect(() => {
     const fetchEvent = async () => {
       if (!slug) return;
-      const { data } = await supabase
-        .from('events')
-        .select('id, name, slug, price_per_photo')
-        .eq('slug', slug)
-        .eq('status', 'active')
-        .single();
+      const [{ data }, { data: settings }] = await Promise.all([
+        supabase.from('events').select('id, name, slug, price_per_photo').eq('slug', slug).eq('status', 'active').single(),
+        supabase.from('photographer_settings').select('watermark_text').limit(1).single(),
+      ]);
       if (data) {
         setEvent(data);
       } else {
         navigate('/');
         toast.error('Evento não encontrado');
       }
+      if (settings?.watermark_text) setWatermarkText(settings.watermark_text);
     };
     fetchEvent();
   }, [slug, navigate]);
@@ -166,6 +166,7 @@ const EventGallery = () => {
                 onToggle={() => toggleSelect(photo.id)}
                 onPreview={() => setPreviewIndex(index)}
                 getPublicUrl={getPublicUrl}
+                watermarkText={watermarkText}
               />
             ))}
           </div>
@@ -225,14 +226,14 @@ interface PhotoCardProps {
   onToggle: () => void;
   onPreview: () => void;
   getPublicUrl: (path: string) => string;
+  watermarkText: string;
 }
 
-const PhotoCard = ({ photo, isSelected, onToggle, onPreview, getPublicUrl }: PhotoCardProps) => {
+const PhotoCard = ({ photo, isSelected, onToggle, onPreview, getPublicUrl, watermarkText }: PhotoCardProps) => {
   const [loaded, setLoaded] = useState(false);
 
   return (
     <div className="relative aspect-square rounded-lg overflow-hidden bg-muted group">
-      {/* Lazy loaded image */}
       <img
         src={getPublicUrl(photo.thumbnail_path)}
         alt={`Foto ${photo.photo_code}`}
@@ -245,10 +246,9 @@ const PhotoCard = ({ photo, isSelected, onToggle, onPreview, getPublicUrl }: Pho
       {/* Watermark */}
       <div
         className="absolute inset-0 flex items-center justify-center pointer-events-none select-none"
-        onClick={onPreview}
       >
         <span className="text-white/30 font-bold text-lg rotate-[-30deg] tracking-widest">
-          AMOSTRA
+          {watermarkText}
         </span>
       </div>
 
