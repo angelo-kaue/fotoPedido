@@ -20,11 +20,6 @@ const AdminEventForm = () => {
   const [status, setStatus] = useState('active');
   const [saving, setSaving] = useState(false);
 
-  // Upload state
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadTotal, setUploadTotal] = useState(0);
-  const [uploadCurrent, setUploadCurrent] = useState(0);
   const [existingPhotoCount, setExistingPhotoCount] = useState(0);
 
   useEffect(() => {
