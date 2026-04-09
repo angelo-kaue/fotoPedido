@@ -12,6 +12,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminEventForm from "./pages/AdminEventForm";
 import AdminOrders from "./pages/AdminOrders";
+import AdminSettings from "./pages/AdminSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

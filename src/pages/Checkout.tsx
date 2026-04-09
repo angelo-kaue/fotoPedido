@@ -124,18 +124,19 @@ const Checkout = () => {
       // Build WhatsApp message
       const codes = selectedPhotos.map((p) => p.photo_code).join(', ');
       const message = encodeURIComponent(
-        `Olá! Gostaria de encomendar fotos do evento *${event.name}*.\n\n` +
-        `📸 Fotos selecionadas (${selectedPhotos.length}):\n${codes}\n\n` +
-        `💰 Valor total: R$ ${totalPrice.toFixed(2).replace('.', ',')}\n\n` +
-        `📱 Meu WhatsApp: ${whatsapp}`
+        `Olá! Quero comprar fotos do evento *${event.name}*\n\n` +
+        `📸 Fotos escolhidas:\n${codes}\n\n` +
+        `💰 Total: R$ ${totalPrice.toFixed(2).replace('.', ',')}\n\n` +
+        `📱 Meu número: ${whatsapp}`
       );
 
       setSent(true);
       toast.success('Seleção salva com sucesso!');
 
-      // Open WhatsApp
+      // Open WhatsApp — send TO the photographer's number
+      const targetWa = photographerWa || cleanWa;
       setTimeout(() => {
-        window.open(`https://wa.me/55${cleanWa}?text=${message}`, '_blank');
+        window.open(`https://wa.me/55${targetWa}?text=${message}`, '_blank');
       }, 500);
     } catch (error) {
       toast.error('Erro ao salvar seleção. Tente novamente.');
