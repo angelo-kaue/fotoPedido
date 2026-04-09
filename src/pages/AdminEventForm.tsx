@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import BulkPhotoUploader from '@/components/BulkPhotoUploader';
+import AdminPhotoManager from '@/components/admin/AdminPhotoManager';
 
 const AdminEventForm = () => {
   const { id } = useParams<{ id: string }>();
@@ -161,11 +162,17 @@ const AdminEventForm = () => {
         </Card>
 
         {!isNew && id && (
-          <BulkPhotoUploader
-            eventId={id}
-            existingPhotoCount={existingPhotoCount}
-            onUploadComplete={(count) => setExistingPhotoCount(prev => prev + count)}
-          />
+          <>
+            <BulkPhotoUploader
+              eventId={id}
+              existingPhotoCount={existingPhotoCount}
+              onUploadComplete={(count) => setExistingPhotoCount(prev => prev + count)}
+            />
+            <AdminPhotoManager
+              eventId={id}
+              onPhotoDeleted={() => setExistingPhotoCount(prev => Math.max(0, prev - 1))}
+            />
+          </>
         )}
       </main>
     </div>
