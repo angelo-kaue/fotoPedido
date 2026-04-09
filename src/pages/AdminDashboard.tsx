@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Camera, LogOut, Image, ShoppingCart, Calendar } from 'lucide-react';
+import { Plus, Camera, LogOut, Image, ShoppingCart, Calendar, Settings } from 'lucide-react';
 
 interface EventWithCount {
   id: string;
@@ -73,6 +73,11 @@ const AdminDashboard = () => {
             <Link to="/admin/pedidos">
               <Button variant="outline" size="sm" className="min-h-[44px]">
                 <ShoppingCart className="h-4 w-4 mr-1" /> Pedidos
+              </Button>
+            </Link>
+            <Link to="/admin/configuracoes">
+              <Button variant="outline" size="sm" className="min-h-[44px]">
+                <Settings className="h-4 w-4 mr-1" /> Config
               </Button>
             </Link>
             <Button variant="ghost" size="sm" onClick={handleLogout} className="min-h-[44px]">
