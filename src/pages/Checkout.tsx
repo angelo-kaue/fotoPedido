@@ -27,6 +27,7 @@ const Checkout = () => {
   const [whatsapp, setWhatsapp] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [photographerWa, setPhotographerWa] = useState<string>('');
 
   useEffect(() => {
     const fetchEvent = async () => {
