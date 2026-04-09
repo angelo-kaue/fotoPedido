@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       event_photos: {
         Row: {
+          captured_at: string | null
           created_at: string
           event_id: string
           id: string
@@ -26,6 +27,7 @@ export type Database = {
           thumbnail_path: string
         }
         Insert: {
+          captured_at?: string | null
           created_at?: string
           event_id: string
           id?: string
@@ -36,6 +38,7 @@ export type Database = {
           thumbnail_path: string
         }
         Update: {
+          captured_at?: string | null
           created_at?: string
           event_id?: string
           id?: string

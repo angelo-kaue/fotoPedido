@@ -1,9 +1,13 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Heart, Check, Camera, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { ArrowUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import GalleryHeader from '@/components/gallery/GalleryHeader';
+import GalleryFilters from '@/components/gallery/GalleryFilters';
+import GalleryBottomBar from '@/components/gallery/GalleryBottomBar';
+import TimeGroupSection from '@/components/gallery/TimeGroupSection';
 import PhotoPreviewModal from '@/components/PhotoPreviewModal';
 
 interface Photo {
@@ -11,6 +15,7 @@ interface Photo {
   photo_code: string;
   thumbnail_path: string;
   preview_path: string;
+  captured_at: string | null;
 }
 
 interface Event {
@@ -20,7 +25,7 @@ interface Event {
   price_per_photo: number;
 }
 
-const BATCH_SIZE = 50;
+const BATCH_SIZE = 200;
 
 const EventGallery = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -33,28 +38,37 @@ const EventGallery = () => {
   const [page, setPage] = useState(0);
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [watermarkText, setWatermarkText] = useState('AMOSTRA');
+  const [searchCode, setSearchCode] = useState('');
+  const [selectedTimeGroup, setSelectedTimeGroup] = useState('all');
+  const [showSelected, setShowSelected] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const loaderRef = useRef<HTMLDivElement>(null);
+
+  // Track scroll for "back to top"
+  useEffect(() => {
+    const handleScroll = () => setShowScrollTop(window.scrollY > 600);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Load selections from localStorage
   useEffect(() => {
     if (slug) {
       const saved = localStorage.getItem(`selection_${slug}`);
       if (saved) {
-        try {
-          setSelectedIds(new Set(JSON.parse(saved)));
-        } catch {}
+        try { setSelectedIds(new Set(JSON.parse(saved))); } catch {}
       }
     }
   }, [slug]);
 
-  // Save selections to localStorage
+  // Save selections
   useEffect(() => {
     if (slug && selectedIds.size > 0) {
       localStorage.setItem(`selection_${slug}`, JSON.stringify([...selectedIds]));
     }
   }, [selectedIds, slug]);
 
-  // Fetch event
+  // Fetch event + settings
   useEffect(() => {
     const fetchEvent = async () => {
       if (!slug) return;
@@ -81,7 +95,7 @@ const EventGallery = () => {
 
     const { data } = await supabase
       .from('event_photos')
-      .select('id, photo_code, thumbnail_path, preview_path')
+      .select('id, photo_code, thumbnail_path, preview_path, captured_at')
       .eq('event_id', event.id)
       .order('sort_order')
       .range(from, to);
@@ -97,7 +111,7 @@ const EventGallery = () => {
     if (event) fetchPhotos();
   }, [event, fetchPhotos]);
 
-  // Infinite scroll observer
+  // Infinite scroll
   useEffect(() => {
     if (!loaderRef.current || !hasMore) return;
     const observer = new IntersectionObserver(
@@ -115,11 +129,7 @@ const EventGallery = () => {
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) { next.delete(id); } else { next.add(id); }
       return next;
     });
   };
@@ -128,6 +138,70 @@ const EventGallery = () => {
     const { data } = supabase.storage.from('event-photos').getPublicUrl(path);
     return data.publicUrl;
   };
+
+  // Parse code range like "A001-A200" or "#A001–#A200"
+  const parseCodeRange = (input: string): { start: string; end: string } | null => {
+    const cleaned = input.replace(/#/g, '').trim();
+    const match = cleaned.match(/^([A-Z]\d{3})\s*[-–]\s*([A-Z]\d{3})$/i);
+    if (!match) return null;
+    return { start: match[1].toUpperCase(), end: match[2].toUpperCase() };
+  };
+
+  // Filter photos
+  const filteredPhotos = useMemo(() => {
+    let result = photos;
+
+    // Search filter
+    if (searchCode.trim()) {
+      const range = parseCodeRange(searchCode);
+      if (range) {
+        result = result.filter((p) => {
+          const code = p.photo_code.replace('#', '');
+          return code >= range.start && code <= range.end;
+        });
+      } else {
+        const q = searchCode.replace('#', '').toLowerCase();
+        result = result.filter((p) =>
+          p.photo_code.toLowerCase().includes(q)
+        );
+      }
+    }
+
+    // Show selected only
+    if (showSelected) {
+      result = result.filter((p) => selectedIds.has(p.id));
+    }
+
+    // Time group filter
+    if (selectedTimeGroup !== 'all') {
+      result = result.filter((p) => getTimeGroupLabel(p.captured_at) === selectedTimeGroup);
+    }
+
+    return result;
+  }, [photos, searchCode, showSelected, selectedTimeGroup, selectedIds]);
+
+  // Group photos by hour
+  const timeGroups = useMemo(() => {
+    const groups = new Map<string, Photo[]>();
+    
+    filteredPhotos.forEach((photo) => {
+      const label = getTimeGroupLabel(photo.captured_at);
+      if (!groups.has(label)) groups.set(label, []);
+      groups.get(label)!.push(photo);
+    });
+
+    return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [filteredPhotos]);
+
+  // All unique time group labels for the filter dropdown
+  const allTimeGroupLabels = useMemo(() => {
+    const labels = new Set<string>();
+    photos.forEach((p) => labels.add(getTimeGroupLabel(p.captured_at)));
+    return Array.from(labels).sort();
+  }, [photos]);
+
+  // Build flat filtered list for preview navigation
+  const flatFiltered = filteredPhotos;
 
   if (loading && photos.length === 0) {
     return (
@@ -139,40 +213,67 @@ const EventGallery = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur py-4">
-        <div className="container mx-auto px-4 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <Camera className="h-6 w-6 text-primary" />
-          <h1 className="text-lg font-bold text-foreground truncate">{event?.name}</h1>
-        </div>
-      </header>
+      <GalleryHeader eventName={event?.name || ''} />
 
-      {/* Photo Grid */}
+      <GalleryFilters
+        searchCode={searchCode}
+        onSearchChange={setSearchCode}
+        timeGroups={allTimeGroupLabels}
+        selectedTimeGroup={selectedTimeGroup}
+        onTimeGroupChange={setSelectedTimeGroup}
+        showSelected={showSelected}
+        onToggleShowSelected={() => setShowSelected(!showSelected)}
+        selectedCount={selectedIds.size}
+      />
+
       <main className="container mx-auto px-2 py-4">
-        {photos.length === 0 ? (
+        {filteredPhotos.length === 0 ? (
           <p className="text-center text-muted-foreground py-16">
-            Nenhuma foto disponível neste evento ainda.
+            {photos.length === 0
+              ? 'Nenhuma foto disponível neste evento ainda.'
+              : 'Nenhuma foto encontrada com esses filtros.'}
           </p>
-        ) : (
+        ) : timeGroups.length <= 1 ? (
+          /* No grouping needed — flat grid */
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-            {photos.map((photo, index) => (
-              <PhotoCard
+            {filteredPhotos.map((photo, index) => (
+              <PhotoCardWrapper
                 key={photo.id}
                 photo={photo}
-                isSelected={selectedIds.has(photo.id)}
-                onToggle={() => toggleSelect(photo.id)}
-                onPreview={() => setPreviewIndex(index)}
+                index={index}
+                selectedIds={selectedIds}
+                onToggle={toggleSelect}
+                onPreview={setPreviewIndex}
                 getPublicUrl={getPublicUrl}
                 watermarkText={watermarkText}
               />
             ))}
           </div>
+        ) : (
+          /* Time-grouped sections */
+          (() => {
+            let offset = 0;
+            return timeGroups.map(([label, groupPhotos], gi) => {
+              const currentOffset = offset;
+              offset += groupPhotos.length;
+              return (
+                <TimeGroupSection
+                  key={label}
+                  label={label}
+                  photos={groupPhotos}
+                  selectedIds={selectedIds}
+                  onToggle={toggleSelect}
+                  onPreview={setPreviewIndex}
+                  getPublicUrl={getPublicUrl}
+                  watermarkText={watermarkText}
+                  defaultOpen={gi === 0}
+                  globalIndexOffset={currentOffset}
+                />
+              );
+            });
+          })()
         )}
 
-        {/* Infinite scroll loader */}
         <div ref={loaderRef} className="py-8 flex justify-center">
           {hasMore && (
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -180,34 +281,26 @@ const EventGallery = () => {
         </div>
       </main>
 
-      {/* Fixed bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t shadow-lg">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Heart className="h-5 w-5 text-primary" />
-            <span className="font-semibold text-foreground">
-              {selectedIds.size} {selectedIds.size === 1 ? 'foto' : 'fotos'}
-            </span>
-            {event && selectedIds.size > 0 && (
-              <span className="text-sm text-muted-foreground">
-                • R$ {(selectedIds.size * event.price_per_photo).toFixed(2).replace('.', ',')}
-              </span>
-            )}
-          </div>
-          <Button
-            onClick={() => navigate(`/evento/${slug}/finalizar`)}
-            disabled={selectedIds.size === 0}
-            className="min-h-[44px] px-6"
-          >
-            Finalizar Seleção
-          </Button>
-        </div>
-      </div>
+      {/* Scroll to top */}
+      {showScrollTop && (
+        <Button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-20 right-4 z-50 rounded-full w-12 h-12 shadow-lg"
+          size="icon"
+        >
+          <ArrowUp className="h-5 w-5" />
+        </Button>
+      )}
 
-      {/* Preview Modal */}
+      <GalleryBottomBar
+        selectedCount={selectedIds.size}
+        totalPrice={selectedIds.size * (event?.price_per_photo || 0)}
+        slug={slug || ''}
+      />
+
       {previewIndex !== null && (
         <PhotoPreviewModal
-          photos={photos}
+          photos={flatFiltered}
           currentIndex={previewIndex}
           selectedIds={selectedIds}
           onToggle={toggleSelect}
@@ -220,64 +313,50 @@ const EventGallery = () => {
   );
 };
 
-interface PhotoCardProps {
-  photo: Photo;
-  isSelected: boolean;
-  onToggle: () => void;
-  onPreview: () => void;
-  getPublicUrl: (path: string) => string;
-  watermarkText: string;
+/* Helper: get time group label from a timestamp */
+function getTimeGroupLabel(capturedAt: string | null): string {
+  if (!capturedAt) return 'Sem horário';
+  try {
+    const date = new Date(capturedAt);
+    if (isNaN(date.getTime())) return 'Sem horário';
+    const h = date.getHours();
+    const nextH = h + 1;
+    return `${String(h).padStart(2, '0')}:00 – ${String(nextH).padStart(2, '0')}:00`;
+  } catch {
+    return 'Sem horário';
+  }
 }
 
-const PhotoCard = ({ photo, isSelected, onToggle, onPreview, getPublicUrl, watermarkText }: PhotoCardProps) => {
-  const [loaded, setLoaded] = useState(false);
+/* Inline wrapper to avoid importing PhotoCard directly in this file */
+import PhotoCardComponent from '@/components/gallery/PhotoCard';
 
+function PhotoCardWrapper({
+  photo,
+  index,
+  selectedIds,
+  onToggle,
+  onPreview,
+  getPublicUrl,
+  watermarkText,
+}: {
+  photo: Photo;
+  index: number;
+  selectedIds: Set<string>;
+  onToggle: (id: string) => void;
+  onPreview: (i: number) => void;
+  getPublicUrl: (p: string) => string;
+  watermarkText: string;
+}) {
   return (
-    <div className="relative aspect-square rounded-lg overflow-hidden bg-muted group">
-      <img
-        src={getPublicUrl(photo.thumbnail_path)}
-        alt={`Foto ${photo.photo_code}`}
-        className={`w-full h-full object-cover cursor-pointer transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
-        loading="lazy"
-        onLoad={() => setLoaded(true)}
-        onClick={onPreview}
-      />
-
-      {/* Watermark */}
-      <div
-        className="absolute inset-0 flex items-center justify-center pointer-events-none select-none"
-      >
-        <span className="text-white/30 font-bold text-lg rotate-[-30deg] tracking-widest">
-          {watermarkText}
-        </span>
-      </div>
-
-      {/* Photo code badge */}
-      <div className="absolute top-2 left-2 bg-foreground/70 text-background text-xs font-mono px-2 py-0.5 rounded">
-        {photo.photo_code}
-      </div>
-
-      {/* Select button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggle();
-        }}
-        className={`absolute bottom-2 right-2 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
-          isSelected
-            ? 'bg-primary text-primary-foreground scale-110'
-            : 'bg-card/80 text-muted-foreground hover:bg-card'
-        }`}
-      >
-        {isSelected ? <Check className="h-5 w-5" /> : <Heart className="h-5 w-5" />}
-      </button>
-
-      {/* Loading skeleton */}
-      {!loaded && (
-        <div className="absolute inset-0 bg-muted animate-pulse" />
-      )}
-    </div>
+    <PhotoCardComponent
+      photo={photo}
+      isSelected={selectedIds.has(photo.id)}
+      onToggle={() => onToggle(photo.id)}
+      onPreview={() => onPreview(index)}
+      getPublicUrl={getPublicUrl}
+      watermarkText={watermarkText}
+    />
   );
-};
+}
 
 export default EventGallery;
