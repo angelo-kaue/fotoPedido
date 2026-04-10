@@ -53,12 +53,12 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-muted/30">
       <header className="sticky top-0 z-40 border-b bg-card/80 backdrop-blur-xl py-3">
         <div className="container mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Camera className="h-5 w-5 text-primary" />
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-sm">
+              <Camera className="h-5 w-5 text-primary-foreground" />
             </div>
             <h1 className="text-lg font-bold text-foreground">Painel Admin</h1>
           </div>
@@ -82,9 +82,9 @@ const AdminDashboard = () => {
 
       <main className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-foreground">Eventos</h2>
+          <h2 className="text-xl font-bold text-foreground">Eventos</h2>
           <Link to="/admin/evento/novo">
-            <Button className="min-h-[44px] rounded-xl shadow-lg shadow-primary/20">
+            <Button className="min-h-[44px] rounded-xl shadow-lg shadow-primary/20 bg-gradient-to-r from-primary to-primary/80">
               <Plus className="h-4 w-4 mr-2" /> Novo Evento
             </Button>
           </Link>
@@ -113,14 +113,14 @@ const AdminDashboard = () => {
           <div className="space-y-3">
             {events.map((event) => (
               <Link key={event.id} to={`/admin/evento/${event.id}`}>
-                <Card className="hover:shadow-lg hover:scale-[1.01] transition-all duration-200 cursor-pointer mb-3 border-0 shadow-md">
+                <Card className="hover:shadow-xl hover:scale-[1.01] transition-all duration-200 cursor-pointer mb-3 border-0 shadow-md">
                   <CardContent className="p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center flex-shrink-0">
                         <Camera className="h-5 w-5 text-primary" />
                       </div>
                       <div className="min-w-0">
-                        <h3 className="font-semibold text-foreground truncate">{event.name}</h3>
+                        <h3 className="font-bold text-foreground truncate">{event.name}</h3>
                         <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
                           {event.event_date && (
                             <span className="flex items-center gap-1">

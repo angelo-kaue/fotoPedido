@@ -1,0 +1,1 @@
+ALTER TABLE public.selections ADD COLUMN customer_name text NOT NULL DEFAULT '';

@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useSignedUrls } from '@/hooks/useSignedUrls';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Phone, Image as ImageIcon, Copy, ClipboardCheck, Eye, X, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Phone, Image as ImageIcon, Copy, ClipboardCheck, Eye, X, ShoppingBag, User } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PhotoDetail {
@@ -16,6 +17,7 @@ interface PhotoDetail {
 
 interface Selection {
   id: string;
+  customer_name: string;
   whatsapp: string;
   status: string;
   total_photos: number;
@@ -33,11 +35,6 @@ const STATUS_OPTIONS = [
   { value: 'entregue', label: 'Entregue', color: 'bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]' },
 ];
 
-const getPublicUrl = (path: string) => {
-  if (!path) return '';
-  return supabase.storage.from('event-photos').getPublicUrl(path).data.publicUrl;
-};
-
 const AdminOrders = () => {
   const navigate = useNavigate();
   const [selections, setSelections] = useState<Selection[]>([]);
@@ -47,6 +44,7 @@ const AdminOrders = () => {
   const [events, setEvents] = useState<{ id: string; name: string }[]>([]);
   const [previewPhoto, setPreviewPhoto] = useState<PhotoDetail | null>(null);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const { getSignedUrl, fetchSignedUrls } = useSignedUrls();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -69,6 +67,7 @@ const AdminOrders = () => {
           const photoDetails: PhotoDetail[] = (photos || []).map((p: any) => p.event_photos).filter(Boolean);
           return {
             ...sel,
+            customer_name: sel.customer_name || '',
             event_name: sel.events?.name || 'Evento desconhecido',
             photo_codes: photoDetails.map((p) => p.photo_code),
             photos: photoDetails,
@@ -80,6 +79,19 @@ const AdminOrders = () => {
     };
     fetchData();
   }, []);
+
+  // Fetch signed URLs when an order is expanded
+  const handleExpand = useCallback((selId: string, photos: PhotoDetail[]) => {
+    if (expandedOrder === selId) { setExpandedOrder(null); return; }
+    setExpandedOrder(selId);
+    const paths = photos.flatMap((p) => [p.thumbnail_path, p.preview_path].filter(Boolean));
+    if (paths.length > 0) fetchSignedUrls(paths);
+  }, [expandedOrder, fetchSignedUrls]);
+
+  const handlePreview = useCallback((photo: PhotoDetail) => {
+    fetchSignedUrls([photo.preview_path].filter(Boolean));
+    setPreviewPhoto(photo);
+  }, [fetchSignedUrls]);
 
   const updateStatus = async (selectionId: string, newStatus: string) => {
     const { error } = await supabase.from('selections').update({ status: newStatus }).eq('id', selectionId);
@@ -106,7 +118,7 @@ const AdminOrders = () => {
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-muted/30">
       <header className="sticky top-0 z-40 border-b bg-card/80 backdrop-blur-xl py-3">
         <div className="container mx-auto px-4 flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} className="min-w-[44px] min-h-[44px]">
@@ -121,7 +133,7 @@ const AdminOrders = () => {
           <select
             value={filterEvent}
             onChange={(e) => setFilterEvent(e.target.value)}
-            className="flex min-h-[44px] rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex min-h-[44px] rounded-xl border border-input bg-card px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring shadow-sm"
           >
             <option value="all">Todos os eventos</option>
             {events.map((ev) => (
@@ -131,7 +143,7 @@ const AdminOrders = () => {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="flex min-h-[44px] rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex min-h-[44px] rounded-xl border border-input bg-card px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring shadow-sm"
           >
             <option value="all">Todos os status</option>
             <option value="pendente">Pendente</option>
@@ -161,10 +173,16 @@ const AdminOrders = () => {
               const isExpanded = expandedOrder === sel.id;
               return (
                 <Card key={sel.id} className="border-0 shadow-md hover:shadow-lg transition-all duration-200">
-                  <CardContent className="p-4 space-y-3">
+                  <CardContent className="p-5 space-y-3">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="font-semibold text-foreground">{sel.event_name}</p>
+                        <p className="font-bold text-foreground text-base">{sel.event_name}</p>
+                        {sel.customer_name && (
+                          <p className="text-sm text-foreground mt-1 flex items-center gap-1.5">
+                            <User className="h-3.5 w-3.5 text-primary" />
+                            {sel.customer_name}
+                          </p>
+                        )}
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {new Date(sel.created_at).toLocaleDateString('pt-BR', {
                             day: '2-digit', month: '2-digit', year: 'numeric',
@@ -195,16 +213,16 @@ const AdminOrders = () => {
                       </a>
                     </div>
 
-                    <div className="flex items-center justify-between flex-wrap gap-2 bg-muted/50 rounded-lg p-3">
+                    <div className="flex items-center justify-between flex-wrap gap-2 bg-muted/50 rounded-xl p-3">
                       <p className="text-sm text-foreground flex items-center gap-1.5 font-medium">
                         <ImageIcon className="h-4 w-4 text-primary" />
-                        {sel.total_photos} fotos • <span className="text-primary">R$ {Number(sel.total_price).toFixed(2).replace('.', ',')}</span>
+                        {sel.total_photos} fotos • <span className="text-primary font-bold">R$ {Number(sel.total_price).toFixed(2).replace('.', ',')}</span>
                       </p>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm" className="min-h-[36px] rounded-lg" onClick={() => copyPhotoCodes(sel.photo_codes)}>
                           <Copy className="h-3.5 w-3.5 mr-1" /> Copiar
                         </Button>
-                        <Button variant="outline" size="sm" className="min-h-[36px] rounded-lg" onClick={() => setExpandedOrder(isExpanded ? null : sel.id)}>
+                        <Button variant="outline" size="sm" className="min-h-[36px] rounded-lg" onClick={() => handleExpand(sel.id, sel.photos)}>
                           <Eye className="h-3.5 w-3.5 mr-1" /> {isExpanded ? 'Ocultar' : 'Ver fotos'}
                         </Button>
                       </div>
@@ -225,19 +243,32 @@ const AdminOrders = () => {
 
                     {isExpanded && sel.photos.length > 0 && (
                       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 pt-3 border-t animate-fade-in">
-                        {sel.photos.map((photo) => (
-                          <div key={photo.id} className="cursor-pointer group" onClick={() => setPreviewPhoto(photo)}>
-                            <div className="aspect-square overflow-hidden rounded-lg bg-muted">
-                              <img
-                                src={getPublicUrl(photo.thumbnail_path)}
-                                alt={photo.photo_code}
-                                className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
-                                loading="lazy"
-                              />
+                        {sel.photos.map((photo) => {
+                          const thumbUrl = getSignedUrl(photo.thumbnail_path);
+                          return (
+                            <div key={photo.id} className="cursor-pointer group" onClick={() => handlePreview(photo)}>
+                              <div className="aspect-square overflow-hidden rounded-lg bg-muted">
+                                {thumbUrl ? (
+                                  <img
+                                    src={thumbUrl}
+                                    alt={photo.photo_code}
+                                    className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
+                                    loading="lazy"
+                                    onError={(e) => {
+                                      console.error('Failed to load thumbnail:', photo.thumbnail_path);
+                                      (e.target as HTMLImageElement).src = '/placeholder.svg';
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
+                                  </div>
+                                )}
+                              </div>
+                              <p className="text-xs text-center text-muted-foreground font-mono mt-1">{photo.photo_code}</p>
                             </div>
-                            <p className="text-xs text-center text-muted-foreground font-mono mt-1">{photo.photo_code}</p>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </CardContent>
@@ -257,11 +288,24 @@ const AdminOrders = () => {
             >
               <X className="h-5 w-5" />
             </button>
-            <img
-              src={getPublicUrl(previewPhoto.preview_path)}
-              alt={previewPhoto.photo_code}
-              className="w-full max-h-[80vh] object-contain rounded-xl"
-            />
+            {(() => {
+              const previewUrl = getSignedUrl(previewPhoto.preview_path);
+              return previewUrl ? (
+                <img
+                  src={previewUrl}
+                  alt={previewPhoto.photo_code}
+                  className="w-full max-h-[80vh] object-contain rounded-xl"
+                  onError={(e) => {
+                    console.error('Failed to load preview:', previewPhoto.preview_path);
+                    (e.target as HTMLImageElement).src = '/placeholder.svg';
+                  }}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-64">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+                </div>
+              );
+            })()}
             <p className="text-center text-background font-mono mt-3 bg-background/10 rounded-full px-4 py-1 w-fit mx-auto">
               {previewPhoto.photo_code}
             </p>

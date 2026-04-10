@@ -31,21 +31,20 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b bg-card/80 backdrop-blur-xl py-6">
-        <div className="container mx-auto px-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Camera className="h-5 w-5 text-primary" />
+    <div className="min-h-screen bg-muted/30 flex flex-col">
+      <header className="border-b bg-card/80 backdrop-blur-xl py-8">
+        <div className="container mx-auto px-4 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
+            <Camera className="h-6 w-6 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Galeria de Eventos</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Galeria de Eventos</h1>
+            <p className="text-sm text-muted-foreground">Selecione um evento para escolher suas fotos</p>
+          </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8 flex-1">
-        <p className="text-muted-foreground mb-8 text-lg">
-          Selecione um evento para ver e escolher suas fotos favoritas.
-        </p>
-
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
@@ -66,10 +65,10 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {events.map((event) => (
               <Link key={event.id} to={`/evento/${event.slug}`}>
-                <Card className="hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer group border-0 shadow-md">
+                <Card className="hover:shadow-xl hover:scale-[1.02] transition-all duration-200 cursor-pointer group border-0 shadow-md bg-card">
                   <CardContent className="p-5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center flex-shrink-0">
                         <Camera className="h-5 w-5 text-primary" />
                       </div>
                       <div>
@@ -91,7 +90,7 @@ const Index = () => {
         )}
       </main>
 
-      <footer className="border-t py-4 mt-auto">
+      <footer className="border-t py-4 mt-auto bg-card/50">
         <div className="container mx-auto px-4 flex justify-between items-center text-sm text-muted-foreground">
           <span>© {new Date().getFullYear()} Galeria de Eventos</span>
           <Link to="/admin" className="hover:text-primary transition-colors">

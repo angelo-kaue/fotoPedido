@@ -189,7 +189,7 @@ const EventGallery = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-muted/30 pb-24">
       <GalleryHeader eventName={event?.name || ''} />
       <GalleryFilters
         searchCode={searchCode}
