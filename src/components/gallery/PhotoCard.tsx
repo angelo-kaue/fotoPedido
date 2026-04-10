@@ -39,10 +39,10 @@ const PhotoCard = ({ photo, isSelected, onToggle, onPreview, signedUrl, watermar
   return (
     <div
       ref={ref}
-      className={`relative aspect-square rounded-xl overflow-hidden bg-muted group transition-all duration-200 ${
+      className={`relative aspect-square rounded-xl overflow-hidden bg-card group transition-all duration-300 ${
         isSelected
-          ? 'ring-2 ring-primary ring-offset-2 ring-offset-background shadow-lg shadow-primary/10'
-          : 'hover:shadow-lg hover:scale-[1.02]'
+          ? 'ring-2 ring-primary ring-offset-2 ring-offset-background shadow-lg glow-primary'
+          : 'hover:shadow-lg hover:shadow-primary/5 hover:scale-[1.02]'
       }`}
       onContextMenu={(e) => e.preventDefault()}
       style={{ userSelect: 'none' }}
@@ -58,12 +58,10 @@ const PhotoCard = ({ photo, isSelected, onToggle, onPreview, signedUrl, watermar
             onLoad={() => setLoaded(true)}
           />
 
-          {/* Photo code badge */}
-          <div className="absolute top-2 left-2 bg-foreground/60 backdrop-blur-sm text-background text-xs font-mono px-2 py-0.5 rounded-full pointer-events-none">
+          <div className="absolute top-2 left-2 bg-background/70 backdrop-blur-sm text-foreground text-xs font-mono px-2 py-0.5 rounded-full pointer-events-none">
             {photo.photo_code}
           </div>
 
-          {/* Select button */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -71,7 +69,7 @@ const PhotoCard = ({ photo, isSelected, onToggle, onPreview, signedUrl, watermar
             }}
             className={`absolute bottom-2 right-2 w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 ${
               isSelected
-                ? 'bg-primary text-primary-foreground scale-110 shadow-lg shadow-primary/30'
+                ? 'bg-primary text-primary-foreground scale-110 shadow-lg glow-primary'
                 : 'bg-card/70 backdrop-blur-sm text-muted-foreground hover:bg-card hover:scale-110'
             }`}
           >
@@ -82,9 +80,8 @@ const PhotoCard = ({ photo, isSelected, onToggle, onPreview, signedUrl, watermar
             )}
           </button>
 
-          {/* Selection overlay */}
           {isSelected && (
-            <div className="absolute inset-0 bg-primary/5 pointer-events-none" />
+            <div className="absolute inset-0 bg-primary/10 pointer-events-none" />
           )}
 
           {!loaded && (

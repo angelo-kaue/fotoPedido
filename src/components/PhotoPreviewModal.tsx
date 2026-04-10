@@ -61,22 +61,20 @@ const PhotoPreviewModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-[100] bg-foreground/95 backdrop-blur-sm flex flex-col animate-fade-in"
+      className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-md flex flex-col animate-fade-in"
       onContextMenu={(e) => e.preventDefault()}
       style={{ userSelect: 'none' }}
     >
-      {/* Top bar */}
       <div className="flex items-center justify-between p-4">
-        <span className="text-background font-mono text-sm bg-background/10 px-3 py-1 rounded-full">{photo.photo_code}</span>
-        <span className="text-background/60 text-sm">
+        <span className="text-foreground font-mono text-sm bg-secondary px-3 py-1 rounded-full">{photo.photo_code}</span>
+        <span className="text-muted-foreground text-sm">
           {currentIndex + 1} / {photos.length}
         </span>
-        <Button variant="ghost" size="icon" onClick={onClose} className="text-background hover:text-background/80 hover:bg-background/10 min-w-[44px] min-h-[44px]">
+        <Button variant="ghost" size="icon" onClick={onClose} className="text-foreground hover:bg-secondary min-w-[44px] min-h-[44px]">
           <X className="h-6 w-6" />
         </Button>
       </div>
 
-      {/* Image */}
       <div
         className="flex-1 flex items-center justify-center relative px-4"
         onTouchStart={handleTouchStart}
@@ -85,7 +83,7 @@ const PhotoPreviewModal = ({
         {currentIndex > 0 && (
           <button
             onClick={() => onNavigate(currentIndex - 1)}
-            className="absolute left-2 top-1/2 -translate-y-1/2 hidden md:flex w-12 h-12 items-center justify-center rounded-full bg-background/10 text-background hover:bg-background/20 transition-all"
+            className="absolute left-2 top-1/2 -translate-y-1/2 hidden md:flex w-12 h-12 items-center justify-center rounded-full bg-secondary/80 text-foreground hover:bg-secondary transition-all"
           >
             <ChevronLeft className="h-6 w-6" />
           </button>
@@ -101,21 +99,20 @@ const PhotoPreviewModal = ({
         {currentIndex < photos.length - 1 && (
           <button
             onClick={() => onNavigate(currentIndex + 1)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 hidden md:flex w-12 h-12 items-center justify-center rounded-full bg-background/10 text-background hover:bg-background/20 transition-all"
+            className="absolute right-2 top-1/2 -translate-y-1/2 hidden md:flex w-12 h-12 items-center justify-center rounded-full bg-secondary/80 text-foreground hover:bg-secondary transition-all"
           >
             <ChevronRight className="h-6 w-6" />
           </button>
         )}
       </div>
 
-      {/* Bottom bar */}
       <div className="p-4 pb-6 flex justify-center">
         <Button
           onClick={() => onToggle(photo.id)}
           className={`min-h-[52px] px-8 text-base rounded-xl font-semibold transition-all duration-200 ${
             isSelected
-              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
-              : 'bg-background/15 text-background hover:bg-background/25 backdrop-blur'
+              ? 'bg-primary text-primary-foreground shadow-lg glow-primary'
+              : 'bg-secondary text-foreground hover:bg-secondary/80'
           }`}
         >
           {isSelected ? (

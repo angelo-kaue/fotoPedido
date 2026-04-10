@@ -31,7 +31,7 @@ const GalleryFilters = ({
   selectedCount,
 }: GalleryFiltersProps) => {
   return (
-    <div className="sticky top-[57px] z-30 bg-background/80 backdrop-blur-xl border-b py-3">
+    <div className="sticky top-[57px] z-30 bg-background/80 backdrop-blur-xl border-b border-border/50 py-3">
       <div className="container mx-auto px-4 space-y-2">
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -40,13 +40,13 @@ const GalleryFilters = ({
               value={searchCode}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Buscar código (#A123 ou A001–A200)"
-              className="pl-9 min-h-[44px] rounded-xl bg-muted/50 border-0 focus-visible:ring-1"
+              className="pl-9 min-h-[44px] rounded-xl bg-secondary/50 border-border/50 focus-visible:ring-1 focus-visible:ring-primary"
             />
           </div>
 
           {timeGroups.length > 1 && (
             <Select value={selectedTimeGroup} onValueChange={onTimeGroupChange}>
-              <SelectTrigger className="w-[160px] min-h-[44px] rounded-xl bg-muted/50 border-0">
+              <SelectTrigger className="w-[160px] min-h-[44px] rounded-xl bg-secondary/50 border-border/50">
                 <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
                 <SelectValue placeholder="Horário" />
               </SelectTrigger>
@@ -65,7 +65,7 @@ const GalleryFilters = ({
           size="sm"
           onClick={onToggleShowSelected}
           className={`min-h-[36px] rounded-full transition-all duration-200 ${
-            showSelected ? 'shadow-md' : ''
+            showSelected ? 'shadow-md glow-primary' : 'border-border/50'
           }`}
         >
           <Heart className={`h-3.5 w-3.5 mr-1.5 ${showSelected ? 'fill-current' : ''}`} />
