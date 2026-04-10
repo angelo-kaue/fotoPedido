@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Send, Check, Loader2, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Send, Check, Loader2, MessageCircle, User } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Event {
@@ -19,9 +19,8 @@ interface PhotoCode {
   photo_code: string;
 }
 
-const isMobileDevice = () => {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-};
+const isMobileDevice = () =>
+  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
 const openWhatsApp = (phone: string, message: string) => {
   const encoded = encodeURIComponent(message);
@@ -36,6 +35,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
   const [selectedPhotos, setSelectedPhotos] = useState<PhotoCode[]>([]);
+  const [customerName, setCustomerName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -80,6 +80,7 @@ const Checkout = () => {
   const totalPrice = event ? selectedPhotos.length * event.price_per_photo : 0;
 
   const handleSubmit = async () => {
+    if (!customerName.trim()) { toast.error('Por favor, insira seu nome.'); return; }
     const cleanWa = getCleanWhatsapp();
     if (cleanWa.length < 10 || cleanWa.length > 11) {
       toast.error('Por favor, insira um número de WhatsApp válido.');
@@ -91,7 +92,13 @@ const Checkout = () => {
     try {
       const { data: selection, error: selError } = await supabase
         .from('selections')
-        .insert({ event_id: event.id, whatsapp: cleanWa, total_photos: selectedPhotos.length, total_price: totalPrice })
+        .insert({
+          event_id: event.id,
+          whatsapp: cleanWa,
+          customer_name: customerName.trim(),
+          total_photos: selectedPhotos.length,
+          total_price: totalPrice,
+        })
         .select('id')
         .single();
       if (selError) throw selError;
@@ -105,7 +112,7 @@ const Checkout = () => {
 
       const codes = selectedPhotos.map((p) => p.photo_code).join(', ');
       const message =
-        `Olá! Quero comprar fotos do evento *${event.name}*\n\n` +
+        `Olá! Meu nome é *${customerName.trim()}* e quero comprar fotos do evento *${event.name}*\n\n` +
         `📸 Fotos escolhidas:\n${codes}\n\n` +
         `💰 Total: R$ ${totalPrice.toFixed(2).replace('.', ',')}\n\n` +
         `📱 Meu número: ${whatsapp}`;
@@ -113,7 +120,6 @@ const Checkout = () => {
       setSent(true);
       toast.success('Seleção salva com sucesso!');
 
-      // Show "Opening WhatsApp" state, then redirect
       setOpening(true);
       const targetWa = photographerWa || cleanWa;
       const phone = targetWa.startsWith('55') ? targetWa : `55${targetWa}`;
@@ -132,7 +138,7 @@ const Checkout = () => {
 
   if (!event || selectedPhotos.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
       </div>
     );
@@ -140,7 +146,7 @@ const Checkout = () => {
 
   if (sent) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
         <Card className="w-full max-w-md text-center shadow-xl border-0">
           <CardContent className="p-8">
             <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6 animate-scale-in">
@@ -165,7 +171,7 @@ const Checkout = () => {
                     const targetWa = photographerWa || getCleanWhatsapp();
                     const phone = targetWa.startsWith('55') ? targetWa : `55${targetWa}`;
                     const codes = selectedPhotos.map((p) => p.photo_code).join(', ');
-                    const message = `Olá! Quero comprar fotos do evento *${event.name}*\n\n📸 Fotos: ${codes}\n💰 Total: R$ ${totalPrice.toFixed(2).replace('.', ',')}`;
+                    const message = `Olá! Meu nome é *${customerName.trim()}* e quero comprar fotos do evento *${event.name}*\n\n📸 Fotos: ${codes}\n💰 Total: R$ ${totalPrice.toFixed(2).replace('.', ',')}`;
                     openWhatsApp(phone, message);
                   }}
                   variant="outline"
@@ -186,7 +192,7 @@ const Checkout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-muted/30">
       <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur py-4">
         <div className="container mx-auto px-4 flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate(`/evento/${slug}`)}>
@@ -220,7 +226,7 @@ const Checkout = () => {
             </div>
             <div className="border-t pt-4 flex justify-between items-center">
               <span className="text-muted-foreground font-medium">Valor total</span>
-              <span className="text-3xl font-bold text-foreground">
+              <span className="text-3xl font-bold text-primary">
                 R$ {totalPrice.toFixed(2).replace('.', ',')}
               </span>
             </div>
@@ -229,10 +235,21 @@ const Checkout = () => {
 
         <Card className="shadow-lg border-0">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Seu WhatsApp</CardTitle>
-            <p className="text-sm text-muted-foreground">Informe seu número para o fotógrafo entrar em contato.</p>
+            <CardTitle className="text-lg">Seus Dados</CardTitle>
+            <p className="text-sm text-muted-foreground">Informe seus dados para o fotógrafo entrar em contato.</p>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Seu nome completo"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                maxLength={100}
+                className="min-h-[52px] text-lg pl-10"
+              />
+            </div>
             <div className="relative">
               <MessageCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
@@ -246,7 +263,7 @@ const Checkout = () => {
             </div>
             <Button
               onClick={handleSubmit}
-              disabled={sending || getCleanWhatsapp().length < 10}
+              disabled={sending || getCleanWhatsapp().length < 10 || !customerName.trim()}
               className="w-full min-h-[52px] text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-200 shadow-lg shadow-primary/20"
             >
               {sending ? (
