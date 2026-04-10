@@ -40,9 +40,9 @@ const TimeGroupSection = ({
     <div className="mb-6" id={`time-group-${label}`}>
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 py-3 px-3 rounded-xl hover:bg-accent/50 transition-all duration-200 group"
+        className="w-full flex items-center gap-3 py-3 px-3 rounded-xl hover:bg-secondary/50 transition-all duration-200 group"
       >
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${open ? 'bg-primary/10' : 'bg-muted'}`}>
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${open ? 'bg-primary/15' : 'bg-secondary'}`}>
           {open ? <ChevronDown className="h-4 w-4 text-primary" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
         </div>
         <Clock className="h-4 w-4 text-primary" />

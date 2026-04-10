@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Camera, ArrowRight, Calendar, ImageOff } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -31,15 +30,15 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-muted/30 flex flex-col">
-      <header className="border-b bg-card/80 backdrop-blur-xl py-8">
-        <div className="container mx-auto px-4 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
-            <Camera className="h-6 w-6 text-primary-foreground" />
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="border-b border-border/50 bg-card/50 backdrop-blur-xl py-10">
+        <div className="container mx-auto px-4 flex flex-col items-center text-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg glow-primary">
+            <Camera className="h-8 w-8 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Galeria de Eventos</h1>
-            <p className="text-sm text-muted-foreground">Selecione um evento para escolher suas fotos</p>
+            <h1 className="text-3xl font-bold text-foreground">Galeria de Eventos</h1>
+            <p className="text-muted-foreground mt-1">Selecione um evento para escolher suas fotos</p>
           </div>
         </div>
       </header>
@@ -65,14 +64,14 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {events.map((event) => (
               <Link key={event.id} to={`/evento/${event.slug}`}>
-                <Card className="hover:shadow-xl hover:scale-[1.02] transition-all duration-200 cursor-pointer group border-0 shadow-md bg-card">
+                <Card className="hover:shadow-xl hover:shadow-primary/5 hover:scale-[1.02] hover:border-primary/30 transition-all duration-300 cursor-pointer group border-border/50 bg-card/80">
                   <CardContent className="p-5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center flex-shrink-0">
+                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
                         <Camera className="h-5 w-5 text-primary" />
                       </div>
                       <div>
-                        <h2 className="text-lg font-semibold text-card-foreground">{event.name}</h2>
+                        <h2 className="text-lg font-semibold text-foreground">{event.name}</h2>
                         {event.event_date && (
                           <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
@@ -90,7 +89,7 @@ const Index = () => {
         )}
       </main>
 
-      <footer className="border-t py-4 mt-auto bg-card/50">
+      <footer className="border-t border-border/50 py-4 mt-auto bg-card/30">
         <div className="container mx-auto px-4 flex justify-between items-center text-sm text-muted-foreground">
           <span>© {new Date().getFullYear()} Galeria de Eventos</span>
           <Link to="/admin" className="hover:text-primary transition-colors">
