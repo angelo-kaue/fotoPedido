@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Phone, Image as ImageIcon, Copy, ClipboardCheck, Eye } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ArrowLeft, Phone, Image as ImageIcon, Copy, ClipboardCheck, Eye, X, ShoppingBag } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PhotoDetail {
@@ -27,7 +28,7 @@ interface Selection {
 }
 
 const STATUS_OPTIONS = [
-  { value: 'pendente', label: 'Pendente', color: 'bg-warning/10 text-warning' },
+  { value: 'pendente', label: 'Pendente', color: 'bg-warning/10 text-[hsl(var(--warning))]' },
   { value: 'editando', label: 'Editando', color: 'bg-primary/10 text-primary' },
   { value: 'entregue', label: 'Entregue', color: 'bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]' },
 ];
@@ -41,8 +42,8 @@ const AdminOrders = () => {
   const navigate = useNavigate();
   const [selections, setSelections] = useState<Selection[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterEvent, setFilterEvent] = useState<string>('all');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterEvent, setFilterEvent] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
   const [events, setEvents] = useState<{ id: string; name: string }[]>([]);
   const [previewPhoto, setPreviewPhoto] = useState<PhotoDetail | null>(null);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
@@ -57,30 +58,15 @@ const AdminOrders = () => {
         .select('*, events(name)')
         .order('created_at', { ascending: false });
 
-      if (selError) {
-        console.error('Error fetching selections:', selError);
-        setLoading(false);
-        return;
-      }
-
-      if (!selectionsData) {
-        setLoading(false);
-        return;
-      }
+      if (selError || !selectionsData) { setLoading(false); return; }
 
       const selectionsWithPhotos = await Promise.all(
         selectionsData.map(async (sel: any) => {
-          const { data: photos, error: photosErr } = await supabase
+          const { data: photos } = await supabase
             .from('selection_photos')
             .select('photo_id, event_photos(id, photo_code, thumbnail_path, preview_path)')
             .eq('selection_id', sel.id);
-
-          if (photosErr) console.error('Error fetching selection photos:', photosErr);
-
-          const photoDetails: PhotoDetail[] = (photos || [])
-            .map((p: any) => p.event_photos)
-            .filter(Boolean);
-
+          const photoDetails: PhotoDetail[] = (photos || []).map((p: any) => p.event_photos).filter(Boolean);
           return {
             ...sel,
             event_name: sel.events?.name || 'Evento desconhecido',
@@ -89,7 +75,6 @@ const AdminOrders = () => {
           };
         })
       );
-
       setSelections(selectionsWithPhotos);
       setLoading(false);
     };
@@ -97,20 +82,9 @@ const AdminOrders = () => {
   }, []);
 
   const updateStatus = async (selectionId: string, newStatus: string) => {
-    const { error } = await supabase
-      .from('selections')
-      .update({ status: newStatus })
-      .eq('id', selectionId);
-
-    if (error) {
-      console.error('Error updating status:', error);
-      toast.error('Erro ao atualizar status.');
-      return;
-    }
-
-    setSelections((prev) =>
-      prev.map((s) => (s.id === selectionId ? { ...s, status: newStatus } : s))
-    );
+    const { error } = await supabase.from('selections').update({ status: newStatus }).eq('id', selectionId);
+    if (error) { toast.error('Erro ao atualizar status.'); return; }
+    setSelections((prev) => prev.map((s) => (s.id === selectionId ? { ...s, status: newStatus } : s)));
     toast.success('Status atualizado!');
   };
 
@@ -133,9 +107,9 @@ const AdminOrders = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card py-4">
+      <header className="sticky top-0 z-40 border-b bg-card/80 backdrop-blur-xl py-3">
         <div className="container mx-auto px-4 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} className="min-w-[44px] min-h-[44px]">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-bold text-foreground">Pedidos / Seleções</h1>
@@ -143,12 +117,11 @@ const AdminOrders = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6">
-        {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <select
             value={filterEvent}
             onChange={(e) => setFilterEvent(e.target.value)}
-            className="flex min-h-[44px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex min-h-[44px] rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <option value="all">Todos os eventos</option>
             {events.map((ev) => (
@@ -158,7 +131,7 @@ const AdminOrders = () => {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="flex min-h-[44px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex min-h-[44px] rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <option value="all">Todos os status</option>
             <option value="pendente">Pendente</option>
@@ -170,28 +143,29 @@ const AdminOrders = () => {
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <Card key={i} className="animate-pulse">
-                <CardContent className="p-6 h-32" />
-              </Card>
+              <Skeleton key={i} className="h-36 rounded-xl" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <p className="text-center text-muted-foreground py-16">
-            Nenhum pedido encontrado.
-          </p>
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+              <ShoppingBag className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-1">Nenhum pedido encontrado</h3>
+            <p className="text-muted-foreground text-sm">Os pedidos dos clientes aparecerão aqui.</p>
+          </div>
         ) : (
           <div className="space-y-4">
             {filtered.map((sel) => {
               const statusConfig = STATUS_OPTIONS.find((s) => s.value === sel.status);
               const isExpanded = expandedOrder === sel.id;
               return (
-                <Card key={sel.id}>
+                <Card key={sel.id} className="border-0 shadow-md hover:shadow-lg transition-all duration-200">
                   <CardContent className="p-4 space-y-3">
-                    {/* Header */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-start justify-between">
                       <div>
                         <p className="font-semibold text-foreground">{sel.event_name}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           {new Date(sel.created_at).toLocaleDateString('pt-BR', {
                             day: '2-digit', month: '2-digit', year: 'numeric',
                             hour: '2-digit', minute: '2-digit',
@@ -201,7 +175,7 @@ const AdminOrders = () => {
                       <select
                         value={sel.status}
                         onChange={(e) => updateStatus(sel.id, e.target.value)}
-                        className={`text-xs font-medium px-3 py-1.5 rounded-full border-0 ${statusConfig?.color || ''}`}
+                        className={`text-xs font-semibold px-3 py-1.5 rounded-full border-0 cursor-pointer ${statusConfig?.color || ''}`}
                       >
                         {STATUS_OPTIONS.map((opt) => (
                           <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -209,89 +183,59 @@ const AdminOrders = () => {
                       </select>
                     </div>
 
-                    {/* WhatsApp */}
                     <div className="flex items-center gap-2 text-sm">
                       <Phone className="h-4 w-4 text-muted-foreground" />
                       <a
                         href={`https://wa.me/55${sel.whatsapp}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-primary hover:underline"
+                        className="text-primary hover:underline font-medium"
                       >
                         {formatWhatsapp(sel.whatsapp)}
                       </a>
                     </div>
 
-                    {/* Summary + Actions */}
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <p className="text-sm text-muted-foreground flex items-center gap-1">
-                        <ImageIcon className="h-3 w-3" />
-                        {sel.total_photos} fotos • R$ {Number(sel.total_price).toFixed(2).replace('.', ',')}
+                    <div className="flex items-center justify-between flex-wrap gap-2 bg-muted/50 rounded-lg p-3">
+                      <p className="text-sm text-foreground flex items-center gap-1.5 font-medium">
+                        <ImageIcon className="h-4 w-4 text-primary" />
+                        {sel.total_photos} fotos • <span className="text-primary">R$ {Number(sel.total_price).toFixed(2).replace('.', ',')}</span>
                       </p>
                       <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="min-h-[36px]"
-                          onClick={() => copyPhotoCodes(sel.photo_codes)}
-                        >
-                          <Copy className="h-3.5 w-3.5 mr-1" /> Copiar códigos
+                        <Button variant="outline" size="sm" className="min-h-[36px] rounded-lg" onClick={() => copyPhotoCodes(sel.photo_codes)}>
+                          <Copy className="h-3.5 w-3.5 mr-1" /> Copiar
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="min-h-[36px]"
-                          onClick={() => setExpandedOrder(isExpanded ? null : sel.id)}
-                        >
+                        <Button variant="outline" size="sm" className="min-h-[36px] rounded-lg" onClick={() => setExpandedOrder(isExpanded ? null : sel.id)}>
                           <Eye className="h-3.5 w-3.5 mr-1" /> {isExpanded ? 'Ocultar' : 'Ver fotos'}
                         </Button>
                       </div>
                     </div>
 
-                    {/* Quick status buttons */}
                     <div className="flex gap-2 flex-wrap">
                       {sel.status !== 'editando' && (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          className="min-h-[36px]"
-                          onClick={() => updateStatus(sel.id, 'editando')}
-                        >
-                          <ClipboardCheck className="h-3.5 w-3.5 mr-1" /> Marcar como editando
+                        <Button size="sm" variant="secondary" className="min-h-[36px] rounded-lg" onClick={() => updateStatus(sel.id, 'editando')}>
+                          <ClipboardCheck className="h-3.5 w-3.5 mr-1" /> Editando
                         </Button>
                       )}
                       {sel.status !== 'entregue' && (
-                        <Button
-                          size="sm"
-                          variant="default"
-                          className="min-h-[36px]"
-                          onClick={() => updateStatus(sel.id, 'entregue')}
-                        >
-                          <ClipboardCheck className="h-3.5 w-3.5 mr-1" /> Marcar como entregue
+                        <Button size="sm" variant="default" className="min-h-[36px] rounded-lg" onClick={() => updateStatus(sel.id, 'entregue')}>
+                          <ClipboardCheck className="h-3.5 w-3.5 mr-1" /> Entregue
                         </Button>
                       )}
                     </div>
 
-                    {/* Photo thumbnails grid */}
                     {isExpanded && sel.photos.length > 0 && (
-                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 pt-2 border-t">
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 pt-3 border-t animate-fade-in">
                         {sel.photos.map((photo) => (
-                          <div
-                            key={photo.id}
-                            className="cursor-pointer group"
-                            onClick={() => setPreviewPhoto(photo)}
-                          >
-                            <div className="aspect-square overflow-hidden rounded-md bg-muted">
+                          <div key={photo.id} className="cursor-pointer group" onClick={() => setPreviewPhoto(photo)}>
+                            <div className="aspect-square overflow-hidden rounded-lg bg-muted">
                               <img
                                 src={getPublicUrl(photo.thumbnail_path)}
                                 alt={photo.photo_code}
-                                className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
                                 loading="lazy"
                               />
                             </div>
-                            <p className="text-xs text-center text-muted-foreground font-mono mt-1">
-                              {photo.photo_code}
-                            </p>
+                            <p className="text-xs text-center text-muted-foreground font-mono mt-1">{photo.photo_code}</p>
                           </div>
                         ))}
                       </div>
@@ -304,28 +248,21 @@ const AdminOrders = () => {
         )}
       </main>
 
-      {/* Preview Modal */}
       {previewPhoto && (
-        <div
-          className="fixed inset-0 z-50 bg-foreground/90 flex items-center justify-center p-4"
-          onClick={() => setPreviewPhoto(null)}
-        >
-          <div
-            className="relative max-w-3xl w-full"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 z-50 bg-foreground/90 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={() => setPreviewPhoto(null)}>
+          <div className="relative max-w-3xl w-full" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => setPreviewPhoto(null)}
-              className="absolute -top-10 right-0 text-background hover:text-background/80 text-sm"
+              className="absolute -top-12 right-0 w-10 h-10 rounded-full bg-background/10 flex items-center justify-center text-background hover:bg-background/20 transition-colors"
             >
-              Fechar ✕
+              <X className="h-5 w-5" />
             </button>
             <img
               src={getPublicUrl(previewPhoto.preview_path)}
               alt={previewPhoto.photo_code}
-              className="w-full max-h-[80vh] object-contain rounded-lg"
+              className="w-full max-h-[80vh] object-contain rounded-xl"
             />
-            <p className="text-center text-background font-mono mt-2">
+            <p className="text-center text-background font-mono mt-3 bg-background/10 rounded-full px-4 py-1 w-fit mx-auto">
               {previewPhoto.photo_code}
             </p>
           </div>
