@@ -189,7 +189,7 @@ const EventGallery = () => {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30 pb-24">
+    <div className="min-h-screen bg-background pb-24">
       <GalleryHeader eventName={event?.name || ''} />
       <GalleryFilters
         searchCode={searchCode}
@@ -263,7 +263,7 @@ const EventGallery = () => {
       {showScrollTop && (
         <Button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-20 right-4 z-50 rounded-full w-12 h-12 shadow-lg"
+          className="fixed bottom-20 right-4 z-50 rounded-full w-12 h-12 shadow-lg glow-primary"
           size="icon"
         >
           <ArrowUp className="h-5 w-5" />

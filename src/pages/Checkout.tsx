@@ -138,7 +138,7 @@ const Checkout = () => {
 
   if (!event || selectedPhotos.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
       </div>
     );
@@ -146,10 +146,10 @@ const Checkout = () => {
 
   if (sent) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-        <Card className="w-full max-w-md text-center shadow-xl border-0">
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md text-center shadow-xl border-border/50 bg-card/80">
           <CardContent className="p-8">
-            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6 animate-scale-in">
+            <div className="w-20 h-20 rounded-full bg-primary/15 flex items-center justify-center mx-auto mb-6 animate-scale-in glow-primary">
               {opening ? (
                 <Loader2 className="h-10 w-10 text-primary animate-spin" />
               ) : (
@@ -175,7 +175,7 @@ const Checkout = () => {
                     openWhatsApp(phone, message);
                   }}
                   variant="outline"
-                  className="w-full min-h-[48px]"
+                  className="w-full min-h-[48px] border-border/50"
                 >
                   <MessageCircle className="h-5 w-5 mr-2" />
                   Abrir WhatsApp novamente
@@ -192,10 +192,10 @@ const Checkout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur py-4">
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-40 border-b border-border/50 bg-card/60 backdrop-blur-xl py-4">
         <div className="container mx-auto px-4 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(`/evento/${slug}`)}>
+          <Button variant="ghost" size="icon" onClick={() => navigate(`/evento/${slug}`)} className="hover:bg-primary/10">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-bold text-foreground">Finalizar Seleção</h1>
@@ -203,7 +203,7 @@ const Checkout = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 max-w-lg space-y-6">
-        <Card className="shadow-lg border-0">
+        <Card className="shadow-lg border-border/50 bg-card/80">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Resumo do Pedido</CardTitle>
           </CardHeader>
@@ -218,13 +218,13 @@ const Checkout = () => {
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {selectedPhotos.map((p) => (
-                  <span key={p.id} className="bg-primary/10 text-primary text-xs font-mono px-2.5 py-1 rounded-full">
+                  <span key={p.id} className="bg-primary/15 text-primary text-xs font-mono px-2.5 py-1 rounded-full">
                     {p.photo_code}
                   </span>
                 ))}
               </div>
             </div>
-            <div className="border-t pt-4 flex justify-between items-center">
+            <div className="border-t border-border/50 pt-4 flex justify-between items-center">
               <span className="text-muted-foreground font-medium">Valor total</span>
               <span className="text-3xl font-bold text-primary">
                 R$ {totalPrice.toFixed(2).replace('.', ',')}
@@ -233,7 +233,7 @@ const Checkout = () => {
           </CardContent>
         </Card>
 
-        <Card className="shadow-lg border-0">
+        <Card className="shadow-lg border-border/50 bg-card/80">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Seus Dados</CardTitle>
             <p className="text-sm text-muted-foreground">Informe seus dados para o fotógrafo entrar em contato.</p>
@@ -247,7 +247,7 @@ const Checkout = () => {
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 maxLength={100}
-                className="min-h-[52px] text-lg pl-10"
+                className="min-h-[52px] text-lg pl-10 bg-secondary/50 border-border/50 focus-visible:ring-primary"
               />
             </div>
             <div className="relative">
@@ -258,13 +258,13 @@ const Checkout = () => {
                 value={whatsapp}
                 onChange={handleWhatsappChange}
                 maxLength={16}
-                className="min-h-[52px] text-lg pl-10"
+                className="min-h-[52px] text-lg pl-10 bg-secondary/50 border-border/50 focus-visible:ring-primary"
               />
             </div>
             <Button
               onClick={handleSubmit}
               disabled={sending || getCleanWhatsapp().length < 10 || !customerName.trim()}
-              className="w-full min-h-[52px] text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-200 shadow-lg shadow-primary/20"
+              className="w-full min-h-[52px] text-base font-semibold bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-400 transition-all duration-200 shadow-lg glow-primary"
             >
               {sending ? (
                 <>
