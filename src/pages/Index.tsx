@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Camera, ArrowRight } from 'lucide-react';
+import { Camera, ArrowRight, Calendar, ImageOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Event {
   id: string;
@@ -30,15 +31,17 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card py-6">
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="border-b bg-card/80 backdrop-blur-xl py-6">
         <div className="container mx-auto px-4 flex items-center gap-3">
-          <Camera className="h-8 w-8 text-primary" />
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Camera className="h-5 w-5 text-primary" />
+          </div>
           <h1 className="text-2xl font-bold text-foreground">Galeria de Eventos</h1>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 flex-1">
         <p className="text-muted-foreground mb-8 text-lg">
           Selecione um evento para ver e escolher suas fotos favoritas.
         </p>
@@ -46,30 +49,40 @@ const Index = () => {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
-              <Card key={i} className="animate-pulse">
-                <CardContent className="p-6 h-32" />
-              </Card>
+              <Skeleton key={i} className="h-28 rounded-xl" />
             ))}
           </div>
         ) : events.length === 0 ? (
-          <p className="text-center text-muted-foreground py-16 text-lg">
-            Nenhum evento disponível no momento.
-          </p>
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+              <ImageOff className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-1">Nenhum evento disponível</h3>
+            <p className="text-muted-foreground text-sm max-w-xs">
+              Não há eventos publicados no momento. Volte em breve!
+            </p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {events.map((event) => (
               <Link key={event.id} to={`/evento/${event.slug}`}>
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
-                  <CardContent className="p-6 flex items-center justify-between">
-                    <div>
-                      <h2 className="text-xl font-semibold text-card-foreground">{event.name}</h2>
-                      {event.event_date && (
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {new Date(event.event_date).toLocaleDateString('pt-BR')}
-                        </p>
-                      )}
+                <Card className="hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer group border-0 shadow-md">
+                  <CardContent className="p-5 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Camera className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-semibold text-card-foreground">{event.name}</h2>
+                        {event.event_date && (
+                          <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {new Date(event.event_date).toLocaleDateString('pt-BR')}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                   </CardContent>
                 </Card>
               </Link>

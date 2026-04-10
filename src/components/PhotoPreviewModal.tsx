@@ -61,17 +61,17 @@ const PhotoPreviewModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-[100] bg-foreground/95 flex flex-col"
+      className="fixed inset-0 z-[100] bg-foreground/95 backdrop-blur-sm flex flex-col animate-fade-in"
       onContextMenu={(e) => e.preventDefault()}
       style={{ userSelect: 'none' }}
     >
       {/* Top bar */}
       <div className="flex items-center justify-between p-4">
-        <span className="text-background font-mono text-sm">{photo.photo_code}</span>
-        <span className="text-background/70 text-sm">
+        <span className="text-background font-mono text-sm bg-background/10 px-3 py-1 rounded-full">{photo.photo_code}</span>
+        <span className="text-background/60 text-sm">
           {currentIndex + 1} / {photos.length}
         </span>
-        <Button variant="ghost" size="icon" onClick={onClose} className="text-background hover:text-background/80">
+        <Button variant="ghost" size="icon" onClick={onClose} className="text-background hover:text-background/80 hover:bg-background/10 min-w-[44px] min-h-[44px]">
           <X className="h-6 w-6" />
         </Button>
       </div>
@@ -85,7 +85,7 @@ const PhotoPreviewModal = ({
         {currentIndex > 0 && (
           <button
             onClick={() => onNavigate(currentIndex - 1)}
-            className="absolute left-2 top-1/2 -translate-y-1/2 hidden md:flex w-10 h-10 items-center justify-center rounded-full bg-background/20 text-background hover:bg-background/30"
+            className="absolute left-2 top-1/2 -translate-y-1/2 hidden md:flex w-12 h-12 items-center justify-center rounded-full bg-background/10 text-background hover:bg-background/20 transition-all"
           >
             <ChevronLeft className="h-6 w-6" />
           </button>
@@ -95,13 +95,13 @@ const PhotoPreviewModal = ({
           src={getSignedUrl(photo.preview_path)}
           alt={`Foto ${photo.photo_code}`}
           watermarkText={watermarkText}
-          className="max-h-[70vh] max-w-full object-contain rounded-lg"
+          className="max-h-[70vh] max-w-full object-contain rounded-xl"
         />
 
         {currentIndex < photos.length - 1 && (
           <button
             onClick={() => onNavigate(currentIndex + 1)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 hidden md:flex w-10 h-10 items-center justify-center rounded-full bg-background/20 text-background hover:bg-background/30"
+            className="absolute right-2 top-1/2 -translate-y-1/2 hidden md:flex w-12 h-12 items-center justify-center rounded-full bg-background/10 text-background hover:bg-background/20 transition-all"
           >
             <ChevronRight className="h-6 w-6" />
           </button>
@@ -109,13 +109,13 @@ const PhotoPreviewModal = ({
       </div>
 
       {/* Bottom bar */}
-      <div className="p-4 flex justify-center">
+      <div className="p-4 pb-6 flex justify-center">
         <Button
           onClick={() => onToggle(photo.id)}
-          className={`min-h-[48px] px-8 text-base ${
+          className={`min-h-[52px] px-8 text-base rounded-xl font-semibold transition-all duration-200 ${
             isSelected
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-background/20 text-background hover:bg-background/30'
+              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
+              : 'bg-background/15 text-background hover:bg-background/25 backdrop-blur'
           }`}
         >
           {isSelected ? (

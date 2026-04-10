@@ -37,26 +37,28 @@ const TimeGroupSection = ({
   const selectedInGroup = photos.filter((p) => selectedIds.has(p.id)).length;
 
   return (
-    <div className="mb-4" id={`time-group-${label}`}>
+    <div className="mb-6" id={`time-group-${label}`}>
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-2 py-3 px-2 rounded-lg hover:bg-accent/50 transition-colors"
+        className="w-full flex items-center gap-3 py-3 px-3 rounded-xl hover:bg-accent/50 transition-all duration-200 group"
       >
-        {open ? <ChevronDown className="h-5 w-5 text-primary" /> : <ChevronRight className="h-5 w-5 text-muted-foreground" />}
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${open ? 'bg-primary/10' : 'bg-muted'}`}>
+          {open ? <ChevronDown className="h-4 w-4 text-primary" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+        </div>
         <Clock className="h-4 w-4 text-primary" />
         <span className="font-semibold text-foreground">{label}</span>
         <span className="text-sm text-muted-foreground">
           ({photos.length} {photos.length === 1 ? 'foto' : 'fotos'})
         </span>
         {selectedInGroup > 0 && (
-          <span className="ml-auto text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+          <span className="ml-auto text-xs bg-primary text-primary-foreground px-2.5 py-0.5 rounded-full font-medium">
             {selectedInGroup} selecionadas
           </span>
         )}
       </button>
 
       {open && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mt-2 transition-all">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-3 animate-fade-in">
           {photos.map((photo, i) => (
             <PhotoCard
               key={photo.id}

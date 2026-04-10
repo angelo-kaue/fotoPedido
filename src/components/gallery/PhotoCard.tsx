@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Heart, Check } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import ProtectedImage from './ProtectedImage';
 
 interface PhotoCardProps {
@@ -38,11 +39,15 @@ const PhotoCard = ({ photo, isSelected, onToggle, onPreview, signedUrl, watermar
   return (
     <div
       ref={ref}
-      className="relative aspect-square rounded-lg overflow-hidden bg-muted group"
+      className={`relative aspect-square rounded-xl overflow-hidden bg-muted group transition-all duration-200 ${
+        isSelected
+          ? 'ring-2 ring-primary ring-offset-2 ring-offset-background shadow-lg shadow-primary/10'
+          : 'hover:shadow-lg hover:scale-[1.02]'
+      }`}
       onContextMenu={(e) => e.preventDefault()}
       style={{ userSelect: 'none' }}
     >
-      {visible && (
+      {visible ? (
         <>
           <ProtectedImage
             src={signedUrl}
@@ -54,7 +59,7 @@ const PhotoCard = ({ photo, isSelected, onToggle, onPreview, signedUrl, watermar
           />
 
           {/* Photo code badge */}
-          <div className="absolute top-2 left-2 bg-foreground/70 text-background text-xs font-mono px-2 py-0.5 rounded pointer-events-none">
+          <div className="absolute top-2 left-2 bg-foreground/60 backdrop-blur-sm text-background text-xs font-mono px-2 py-0.5 rounded-full pointer-events-none">
             {photo.photo_code}
           </div>
 
@@ -66,19 +71,29 @@ const PhotoCard = ({ photo, isSelected, onToggle, onPreview, signedUrl, watermar
             }}
             className={`absolute bottom-2 right-2 w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 ${
               isSelected
-                ? 'bg-primary text-primary-foreground scale-110 shadow-lg'
-                : 'bg-card/80 text-muted-foreground hover:bg-card'
+                ? 'bg-primary text-primary-foreground scale-110 shadow-lg shadow-primary/30'
+                : 'bg-card/70 backdrop-blur-sm text-muted-foreground hover:bg-card hover:scale-110'
             }`}
           >
-            {isSelected ? <Check className="h-5 w-5" /> : <Heart className="h-5 w-5" />}
+            {isSelected ? (
+              <Check className="h-5 w-5 animate-scale-in" />
+            ) : (
+              <Heart className="h-5 w-5" />
+            )}
           </button>
 
+          {/* Selection overlay */}
+          {isSelected && (
+            <div className="absolute inset-0 bg-primary/5 pointer-events-none" />
+          )}
+
           {!loaded && (
-            <div className="absolute inset-0 bg-muted animate-pulse" />
+            <Skeleton className="absolute inset-0 rounded-none" />
           )}
         </>
+      ) : (
+        <Skeleton className="w-full h-full rounded-none" />
       )}
-      {!visible && <div className="w-full h-full bg-muted" />}
     </div>
   );
 };
