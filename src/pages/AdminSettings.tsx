@@ -99,9 +99,9 @@ const AdminSettings = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card py-4">
+      <header className="border-b border-border/50 bg-card/60 backdrop-blur-xl py-4">
         <div className="container mx-auto px-4 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} className="hover:bg-primary/10">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-bold text-foreground">Configurações</h1>
@@ -109,7 +109,7 @@ const AdminSettings = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 max-w-lg space-y-6">
-        <Card>
+        <Card className="border-border/50 bg-card/80">
           <CardHeader>
             <CardTitle className="text-lg">Dados do Fotógrafo</CardTitle>
           </CardHeader>
@@ -120,7 +120,7 @@ const AdminSettings = () => {
                 value={form.photographer_name}
                 onChange={(e) => setForm((f) => ({ ...f, photographer_name: e.target.value }))}
                 placeholder="Seu nome ou empresa"
-                className="min-h-[48px] mt-1"
+                className="min-h-[48px] mt-1 bg-secondary/50 border-border/50 focus-visible:ring-primary"
               />
             </div>
             <div>
@@ -131,7 +131,7 @@ const AdminSettings = () => {
                 onChange={(e) => setForm((f) => ({ ...f, whatsapp_number: e.target.value }))}
                 placeholder="(11) 99999-9999"
                 maxLength={16}
-                className="min-h-[48px] mt-1"
+                className="min-h-[48px] mt-1 bg-secondary/50 border-border/50 focus-visible:ring-primary"
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Os clientes serão direcionados a este número ao finalizar a seleção.
@@ -140,7 +140,7 @@ const AdminSettings = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-border/50 bg-card/80">
           <CardHeader>
             <CardTitle className="text-lg">Padrões</CardTitle>
           </CardHeader>
@@ -152,7 +152,7 @@ const AdminSettings = () => {
                 step="0.01"
                 value={form.default_price_per_photo}
                 onChange={(e) => setForm((f) => ({ ...f, default_price_per_photo: e.target.value }))}
-                className="min-h-[48px] mt-1"
+                className="min-h-[48px] mt-1 bg-secondary/50 border-border/50 focus-visible:ring-primary"
               />
             </div>
             <div>
@@ -161,7 +161,7 @@ const AdminSettings = () => {
                 value={form.watermark_text}
                 onChange={(e) => setForm((f) => ({ ...f, watermark_text: e.target.value }))}
                 placeholder="AMOSTRA"
-                className="min-h-[48px] mt-1"
+                className="min-h-[48px] mt-1 bg-secondary/50 border-border/50 focus-visible:ring-primary"
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Exibido sobre as fotos na galeria pública.
@@ -170,7 +170,7 @@ const AdminSettings = () => {
           </CardContent>
         </Card>
 
-        <Button onClick={handleSave} disabled={saving} className="w-full min-h-[48px] text-base">
+        <Button onClick={handleSave} disabled={saving} className="w-full min-h-[48px] text-base bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-400 glow-primary">
           <Save className="h-5 w-5 mr-2" />
           {saving ? 'Salvando...' : 'Salvar Configurações'}
         </Button>

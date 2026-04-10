@@ -53,27 +53,27 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <header className="sticky top-0 z-40 border-b bg-card/80 backdrop-blur-xl py-3">
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-40 border-b border-border/50 bg-card/60 backdrop-blur-xl py-3">
         <div className="container mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-sm">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-sm glow-primary">
               <Camera className="h-5 w-5 text-primary-foreground" />
             </div>
             <h1 className="text-lg font-bold text-foreground">Painel Admin</h1>
           </div>
           <div className="flex gap-2">
             <Link to="/admin/pedidos">
-              <Button variant="outline" size="sm" className="min-h-[44px] rounded-xl">
+              <Button variant="outline" size="sm" className="min-h-[44px] rounded-xl border-border/50 hover:bg-primary/10 hover:border-primary/30">
                 <ShoppingCart className="h-4 w-4 mr-1" /> Pedidos
               </Button>
             </Link>
             <Link to="/admin/configuracoes">
-              <Button variant="outline" size="sm" className="min-h-[44px] rounded-xl">
+              <Button variant="outline" size="sm" className="min-h-[44px] rounded-xl border-border/50 hover:bg-primary/10 hover:border-primary/30">
                 <Settings className="h-4 w-4 mr-1" /> Config
               </Button>
             </Link>
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="min-h-[44px]">
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="min-h-[44px] hover:bg-destructive/10 hover:text-destructive">
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
@@ -84,7 +84,7 @@ const AdminDashboard = () => {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-foreground">Eventos</h2>
           <Link to="/admin/evento/novo">
-            <Button className="min-h-[44px] rounded-xl shadow-lg shadow-primary/20 bg-gradient-to-r from-primary to-primary/80">
+            <Button className="min-h-[44px] rounded-xl shadow-lg glow-primary bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-400">
               <Plus className="h-4 w-4 mr-2" /> Novo Evento
             </Button>
           </Link>
@@ -104,7 +104,7 @@ const AdminDashboard = () => {
             <h3 className="text-lg font-semibold text-foreground mb-1">Nenhum evento criado</h3>
             <p className="text-muted-foreground text-sm mb-4">Crie seu primeiro evento para começar.</p>
             <Link to="/admin/evento/novo">
-              <Button className="min-h-[44px] rounded-xl">
+              <Button className="min-h-[44px] rounded-xl bg-gradient-to-r from-primary to-blue-500">
                 <Plus className="h-4 w-4 mr-2" /> Criar Primeiro Evento
               </Button>
             </Link>
@@ -113,10 +113,10 @@ const AdminDashboard = () => {
           <div className="space-y-3">
             {events.map((event) => (
               <Link key={event.id} to={`/admin/evento/${event.id}`}>
-                <Card className="hover:shadow-xl hover:scale-[1.01] transition-all duration-200 cursor-pointer mb-3 border-0 shadow-md">
+                <Card className="hover:shadow-xl hover:shadow-primary/5 hover:scale-[1.01] hover:border-primary/30 transition-all duration-300 cursor-pointer mb-3 border-border/50 bg-card/80">
                   <CardContent className="p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center flex-shrink-0">
+                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
                         <Camera className="h-5 w-5 text-primary" />
                       </div>
                       <div className="min-w-0">
@@ -141,7 +141,7 @@ const AdminDashboard = () => {
                       <span
                         className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                           event.status === 'active'
-                            ? 'bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]'
+                            ? 'bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]'
                             : 'bg-muted text-muted-foreground'
                         }`}
                       >

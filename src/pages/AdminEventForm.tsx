@@ -109,9 +109,9 @@ const AdminEventForm = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card py-4">
+      <header className="border-b border-border/50 bg-card/60 backdrop-blur-xl py-4">
         <div className="container mx-auto px-4 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} className="hover:bg-primary/10">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-bold text-foreground">
@@ -121,40 +121,40 @@ const AdminEventForm = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 max-w-lg space-y-6">
-        <Card>
+        <Card className="border-border/50 bg-card/80">
           <CardHeader>
             <CardTitle className="text-lg">Dados do Evento</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <label className="text-sm font-medium text-foreground">Nome</label>
-              <Input value={name} onChange={(e) => handleNameChange(e.target.value)} placeholder="Ex: Formatura Turma 2025" className="min-h-[44px]" />
+              <Input value={name} onChange={(e) => handleNameChange(e.target.value)} placeholder="Ex: Formatura Turma 2025" className="min-h-[44px] bg-secondary/50 border-border/50 focus-visible:ring-primary" />
             </div>
             <div>
               <label className="text-sm font-medium text-foreground">Slug (URL)</label>
-              <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="formatura-turma-2025" className="min-h-[44px]" />
+              <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="formatura-turma-2025" className="min-h-[44px] bg-secondary/50 border-border/50 focus-visible:ring-primary" />
               <p className="text-xs text-muted-foreground mt-1">/evento/{slug || '...'}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-foreground">Data do Evento</label>
-              <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="min-h-[44px]" />
+              <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="min-h-[44px] bg-secondary/50 border-border/50 focus-visible:ring-primary" />
             </div>
             <div>
               <label className="text-sm font-medium text-foreground">Preço por Foto (R$)</label>
-              <Input type="number" step="0.01" min="0" value={pricePerPhoto} onChange={(e) => setPricePerPhoto(e.target.value)} className="min-h-[44px]" />
+              <Input type="number" step="0.01" min="0" value={pricePerPhoto} onChange={(e) => setPricePerPhoto(e.target.value)} className="min-h-[44px] bg-secondary/50 border-border/50 focus-visible:ring-primary" />
             </div>
             <div>
               <label className="text-sm font-medium text-foreground">Status</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="flex min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex min-h-[44px] w-full rounded-md border border-border/50 bg-secondary/50 px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <option value="active">Ativo</option>
                 <option value="inactive">Inativo</option>
               </select>
             </div>
-            <Button onClick={handleSave} disabled={saving} className="w-full min-h-[44px]">
+            <Button onClick={handleSave} disabled={saving} className="w-full min-h-[44px] bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-400 glow-primary">
               <Save className="h-4 w-4 mr-2" />
               {saving ? 'Salvando...' : 'Salvar Evento'}
             </Button>
