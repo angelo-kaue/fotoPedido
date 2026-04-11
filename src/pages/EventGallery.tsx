@@ -174,6 +174,14 @@ const EventGallery = () => {
     return Array.from(labels).sort();
   }, [photos]);
 
+  const allPhotosIndexMap = useMemo(() => {
+    const map = new Map<string, number>();
+    filteredPhotos.forEach((p, i) => map.set(p.id, i));
+    return map;
+  }, [filteredPhotos]);
+
+  const showFeatured = !searchCode.trim() && selectedTimeGroup === 'all' && !showSelected;
+
   if (loading && photos.length === 0) {
     return (
       <div className="min-h-screen bg-background">
@@ -204,18 +212,38 @@ const EventGallery = () => {
       />
 
       <main className="container mx-auto px-3 py-4">
+        {showFeatured && filteredPhotos.length > 0 && (
+          <FeaturedSection
+            photos={filteredPhotos}
+            selectedIds={selectedIds}
+            onToggle={toggleSelect}
+            onPreview={setPreviewIndex}
+            getSignedUrl={getSignedUrl}
+            watermarkText={watermarkText}
+            allPhotosIndexMap={allPhotosIndexMap}
+          />
+        )}
+
         {filteredPhotos.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
-              <ImageOff className="h-8 w-8 text-muted-foreground" />
+              {selectedIds.size === 0 && showSelected ? (
+                <Heart className="h-8 w-8 text-muted-foreground" />
+              ) : (
+                <ImageOff className="h-8 w-8 text-muted-foreground" />
+              )}
             </div>
             <h3 className="text-lg font-semibold text-foreground mb-1">
-              {photos.length === 0 ? 'Nenhuma foto disponível' : 'Nenhuma foto encontrada'}
+              {showSelected && selectedIds.size === 0
+                ? 'Nenhuma foto selecionada ainda'
+                : photos.length === 0 ? 'Nenhuma foto disponível' : 'Nenhuma foto encontrada'}
             </h3>
             <p className="text-muted-foreground text-sm max-w-xs">
-              {photos.length === 0
-                ? 'As fotos deste evento ainda não foram publicadas.'
-                : 'Tente ajustar os filtros ou buscar por outro código.'}
+              {showSelected && selectedIds.size === 0
+                ? 'Toque nas fotos para escolher suas favoritas.'
+                : photos.length === 0
+                  ? 'As fotos deste evento ainda não foram publicadas.'
+                  : 'Tente ajustar os filtros ou buscar por outro código.'}
             </p>
           </div>
         ) : timeGroups.length <= 1 ? (
