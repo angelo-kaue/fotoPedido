@@ -19,8 +19,6 @@ interface PhotoCode {
   photo_code: string;
 }
 
-const isMobileDevice = () =>
-  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
 const openWhatsApp = (phone: string, message: string) => {
   const encoded = encodeURIComponent(message);
@@ -37,7 +35,6 @@ const Checkout = () => {
   const [whatsapp, setWhatsapp] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
-  const [opening, setOpening] = useState(false);
   const [photographerWa, setPhotographerWa] = useState('');
 
   useEffect(() => {
