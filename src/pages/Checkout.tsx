@@ -24,10 +24,8 @@ const isMobileDevice = () =>
 
 const openWhatsApp = (phone: string, message: string) => {
   const encoded = encodeURIComponent(message);
-  const url = isMobileDevice()
-    ? `https://wa.me/${phone}?text=${encoded}`
-    : `https://web.whatsapp.com/send?phone=${phone}&text=${encoded}`;
-  window.open(url, '_blank');
+  const url = `https://wa.me/${phone}?text=${encoded}`;
+  window.location.href = url;
 };
 
 const Checkout = () => {
@@ -120,14 +118,9 @@ const Checkout = () => {
       setSent(true);
       toast.success('Seleção salva com sucesso!');
 
-      setOpening(true);
       const targetWa = photographerWa || cleanWa;
       const phone = targetWa.startsWith('55') ? targetWa : `55${targetWa}`;
-
-      setTimeout(() => {
-        openWhatsApp(phone, message);
-        setOpening(false);
-      }, 1200);
+      openWhatsApp(phone, message);
     } catch (error) {
       toast.error('Erro ao salvar seleção. Tente novamente.');
       console.error(error);
