@@ -33,6 +33,7 @@ const STATUS_OPTIONS = [
   { value: 'pendente', label: 'Pendente', color: 'bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]' },
   { value: 'editando', label: 'Editando', color: 'bg-primary/15 text-primary' },
   { value: 'entregue', label: 'Entregue', color: 'bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]' },
+  { value: 'cancelado', label: 'Cancelado', color: 'bg-destructive/15 text-destructive' },
 ];
 
 const AdminOrders = () => {
@@ -148,6 +149,7 @@ const AdminOrders = () => {
             <option value="pendente">Pendente</option>
             <option value="editando">Editando</option>
             <option value="entregue">Entregue</option>
+            <option value="cancelado">Cancelado</option>
           </select>
         </div>
 
@@ -236,6 +238,11 @@ const AdminOrders = () => {
                       {sel.status !== 'entregue' && (
                         <Button size="sm" variant="default" className="min-h-[36px] rounded-lg" onClick={() => updateStatus(sel.id, 'entregue')}>
                           <ClipboardCheck className="h-3.5 w-3.5 mr-1" /> Entregue
+                        </Button>
+                      )}
+                      {sel.status !== 'cancelado' && (
+                        <Button size="sm" variant="outline" className="min-h-[36px] rounded-lg hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30" onClick={() => updateStatus(sel.id, 'cancelado')}>
+                          <X className="h-3.5 w-3.5 mr-1" /> Cancelar
                         </Button>
                       )}
                     </div>

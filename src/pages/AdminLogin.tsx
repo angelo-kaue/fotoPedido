@@ -4,8 +4,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Camera, LogIn } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 import { toast } from 'sonner';
+import logoFotoPedido from '@/assets/logo-fotopedido.png';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -34,10 +35,8 @@ const AdminLogin = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm border-border/50 bg-card/80 shadow-xl">
         <CardHeader className="text-center">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center mx-auto mb-3 glow-primary">
-            <Camera className="h-7 w-7 text-primary-foreground" />
-          </div>
-          <CardTitle className="text-xl">Painel Admin</CardTitle>
+          <img src={logoFotoPedido} alt="FotoPedido" width={56} height={56} className="w-14 h-14 mx-auto mb-3 rounded-2xl shadow-lg" />
+          <CardTitle className="text-xl">FotoPedido</CardTitle>
           <p className="text-sm text-muted-foreground">Entre com suas credenciais</p>
         </CardHeader>
         <CardContent>
