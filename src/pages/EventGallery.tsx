@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ArrowUp, ImageOff } from 'lucide-react';
+import { ArrowUp, ImageOff, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSignedUrls } from '@/hooks/useSignedUrls';
 import GalleryHeader from '@/components/gallery/GalleryHeader';
@@ -11,6 +11,7 @@ import GalleryBottomBar from '@/components/gallery/GalleryBottomBar';
 import TimeGroupSection from '@/components/gallery/TimeGroupSection';
 import PhotoPreviewModal from '@/components/PhotoPreviewModal';
 import PhotoCardComponent from '@/components/gallery/PhotoCard';
+import FeaturedSection from '@/components/gallery/FeaturedSection';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface Photo {
