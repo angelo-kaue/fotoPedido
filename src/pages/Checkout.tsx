@@ -19,11 +19,27 @@ interface PhotoCode {
   photo_code: string;
 }
 
-
-const openWhatsApp = (phone: string, message: string) => {
+const buildWhatsAppUrl = (phone: string, message: string): string => {
+  const cleanPhone = phone.replace(/\D/g, '');
+  const fullPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
   const encoded = encodeURIComponent(message);
-  const url = `https://wa.me/${phone}?text=${encoded}`;
-  window.location.href = url;
+  return `https://wa.me/${fullPhone}?text=${encoded}`;
+};
+
+const buildMessage = (name: string, eventName: string, codes: string[], total: number, whatsapp: string): string => {
+  const codeList = codes.join(', ');
+  const price = `R$ ${total.toFixed(2).replace('.', ',')}`;
+  return [
+    `Ola! Gostaria de encomendar fotos do evento *${eventName}*.`,
+    '',
+    `Fotos selecionadas (${codes.length}):`,
+    codeList,
+    '',
+    `Valor total: ${price}`,
+    '',
+    `Nome: ${name}`,
+    `WhatsApp: ${whatsapp}`,
+  ].join('\n');
 };
 
 const Checkout = () => {
@@ -78,7 +94,7 @@ const Checkout = () => {
     if (!customerName.trim()) { toast.error('Por favor, insira seu nome.'); return; }
     const cleanWa = getCleanWhatsapp();
     if (cleanWa.length < 10 || cleanWa.length > 11) {
-      toast.error('Por favor, insira um número de WhatsApp válido.');
+      toast.error('Por favor, insira um numero de WhatsApp valido.');
       return;
     }
     if (!event) return;
@@ -97,7 +113,7 @@ const Checkout = () => {
         .select('id')
         .single();
       if (selError) throw selError;
-      if (!selection?.id) throw new Error('Falha ao criar seleção');
+      if (!selection?.id) throw new Error('Falha ao criar selecao');
 
       const photoRows = selectedPhotos.map((p) => ({ selection_id: selection.id, photo_id: p.id }));
       const { error: photosError } = await supabase.from('selection_photos').insert(photoRows);
@@ -105,21 +121,19 @@ const Checkout = () => {
 
       localStorage.removeItem(`selection_${slug}`);
 
-      const codes = selectedPhotos.map((p) => p.photo_code).join(', ');
-      const message =
-        `Olá! Meu nome é *${customerName.trim()}* e quero comprar fotos do evento *${event.name}*\n\n` +
-        `📸 Fotos escolhidas:\n${codes}\n\n` +
-        `💰 Total: R$ ${totalPrice.toFixed(2).replace('.', ',')}\n\n` +
-        `📱 Meu número: ${whatsapp}`;
-
-      setSent(true);
-      toast.success('Seleção salva com sucesso!');
+      const codes = selectedPhotos.map((p) => p.photo_code);
+      const message = buildMessage(customerName.trim(), event.name, codes, totalPrice, formatWhatsapp(cleanWa));
 
       const targetWa = photographerWa || cleanWa;
-      const phone = targetWa.startsWith('55') ? targetWa : `55${targetWa}`;
-      openWhatsApp(phone, message);
+      const waUrl = buildWhatsAppUrl(targetWa, message);
+
+      setSent(true);
+      toast.success('Selecao salva com sucesso!');
+
+      // Redirect immediately via location.href for mobile compatibility
+      window.location.href = waUrl;
     } catch (error) {
-      toast.error('Erro ao salvar seleção. Tente novamente.');
+      toast.error('Erro ao salvar selecao. Tente novamente.');
       console.error(error);
     } finally {
       setSending(false);
@@ -135,6 +149,11 @@ const Checkout = () => {
   }
 
   if (sent) {
+    const codes = selectedPhotos.map((p) => p.photo_code);
+    const message = buildMessage(customerName.trim(), event.name, codes, totalPrice, formatWhatsapp(getCleanWhatsapp()));
+    const targetWa = photographerWa || getCleanWhatsapp();
+    const waUrl = buildWhatsAppUrl(targetWa, message);
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md text-center shadow-xl border-border/50 bg-card/80">
@@ -142,19 +161,13 @@ const Checkout = () => {
             <div className="w-20 h-20 rounded-full bg-primary/15 flex items-center justify-center mx-auto mb-6 animate-scale-in glow-primary">
               <Check className="h-10 w-10 text-primary" />
             </div>
-            <h2 className="text-2xl font-bold text-foreground mb-2">Seleção Enviada!</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-2">Selecao Enviada!</h2>
             <p className="text-muted-foreground mb-8">
-              {`Suas ${selectedPhotos.length} fotos foram registradas. O fotógrafo entrará em contato pelo WhatsApp.`}
+              {`Suas ${selectedPhotos.length} fotos foram registradas. O fotografo entrara em contato pelo WhatsApp.`}
             </p>
             <div className="space-y-3">
               <Button
-                onClick={() => {
-                  const targetWa = photographerWa || getCleanWhatsapp();
-                  const phone = targetWa.startsWith('55') ? targetWa : `55${targetWa}`;
-                  const codes = selectedPhotos.map((p) => p.photo_code).join(', ');
-                  const message = `Olá! Meu nome é *${customerName.trim()}* e quero comprar fotos do evento *${event.name}*\n\n📸 Fotos: ${codes}\n💰 Total: R$ ${totalPrice.toFixed(2).replace('.', ',')}`;
-                  openWhatsApp(phone, message);
-                }}
+                onClick={() => { window.location.href = waUrl; }}
                 variant="outline"
                 className="w-full min-h-[48px] border-border/50"
               >
@@ -162,7 +175,7 @@ const Checkout = () => {
                 Abrir WhatsApp novamente
               </Button>
               <Button onClick={() => navigate('/')} variant="ghost" className="w-full min-h-[48px]">
-                Voltar ao Início
+                Voltar ao Inicio
               </Button>
             </div>
           </CardContent>
@@ -178,7 +191,7 @@ const Checkout = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate(`/evento/${slug}`)} className="hover:bg-primary/10">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-bold text-foreground">Finalizar Seleção</h1>
+          <h1 className="text-lg font-bold text-foreground">Finalizar Selecao</h1>
         </div>
       </header>
 
@@ -216,7 +229,7 @@ const Checkout = () => {
         <Card className="shadow-lg border-border/50 bg-card/80">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Seus Dados</CardTitle>
-            <p className="text-sm text-muted-foreground">Informe seus dados para o fotógrafo entrar em contato.</p>
+            <p className="text-sm text-muted-foreground">Informe seus dados para o fotografo entrar em contato.</p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="relative">

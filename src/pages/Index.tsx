@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Camera, ArrowRight, Calendar, ImageOff } from 'lucide-react';
+import { ArrowRight, Calendar, ImageOff } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import logoFotoPedido from '@/assets/logo-fotopedido.png';
 
 interface Event {
   id: string;
@@ -33,12 +34,10 @@ const Index = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b border-border/50 bg-card/50 backdrop-blur-xl py-10">
         <div className="container mx-auto px-4 flex flex-col items-center text-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg glow-primary">
-            <Camera className="h-8 w-8 text-primary-foreground" />
-          </div>
+          <img src={logoFotoPedido} alt="FotoPedido" width={64} height={64} className="w-16 h-16 rounded-2xl shadow-lg" />
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Galeria de Eventos</h1>
-            <p className="text-muted-foreground mt-1">Selecione um evento para escolher suas fotos</p>
+            <h1 className="text-3xl font-bold text-foreground">FotoPedido</h1>
+            <p className="text-muted-foreground mt-1">Organize e venda suas fotos com facilidade</p>
           </div>
         </div>
       </header>
@@ -68,7 +67,7 @@ const Index = () => {
                   <CardContent className="p-5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
-                        <Camera className="h-5 w-5 text-primary" />
+                        <img src={logoFotoPedido} alt="" width={24} height={24} className="w-6 h-6" loading="lazy" />
                       </div>
                       <div>
                         <h2 className="text-lg font-semibold text-foreground">{event.name}</h2>
@@ -91,7 +90,7 @@ const Index = () => {
 
       <footer className="border-t border-border/50 py-4 mt-auto bg-card/30">
         <div className="container mx-auto px-4 flex justify-between items-center text-sm text-muted-foreground">
-          <span>© {new Date().getFullYear()} Galeria de Eventos</span>
+          <span>© {new Date().getFullYear()} FotoPedido</span>
           <Link to="/admin" className="hover:text-primary transition-colors">
             Área Admin
           </Link>
