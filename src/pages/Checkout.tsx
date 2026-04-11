@@ -19,15 +19,11 @@ interface PhotoCode {
   photo_code: string;
 }
 
-const isMobileDevice = () =>
-  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
 const openWhatsApp = (phone: string, message: string) => {
   const encoded = encodeURIComponent(message);
-  const url = isMobileDevice()
-    ? `https://wa.me/${phone}?text=${encoded}`
-    : `https://web.whatsapp.com/send?phone=${phone}&text=${encoded}`;
-  window.open(url, '_blank');
+  const url = `https://wa.me/${phone}?text=${encoded}`;
+  window.location.href = url;
 };
 
 const Checkout = () => {
@@ -39,7 +35,6 @@ const Checkout = () => {
   const [whatsapp, setWhatsapp] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
-  const [opening, setOpening] = useState(false);
   const [photographerWa, setPhotographerWa] = useState('');
 
   useEffect(() => {
@@ -120,14 +115,9 @@ const Checkout = () => {
       setSent(true);
       toast.success('Seleção salva com sucesso!');
 
-      setOpening(true);
       const targetWa = photographerWa || cleanWa;
       const phone = targetWa.startsWith('55') ? targetWa : `55${targetWa}`;
-
-      setTimeout(() => {
-        openWhatsApp(phone, message);
-        setOpening(false);
-      }, 1200);
+      openWhatsApp(phone, message);
     } catch (error) {
       toast.error('Erro ao salvar seleção. Tente novamente.');
       console.error(error);
@@ -150,41 +140,31 @@ const Checkout = () => {
         <Card className="w-full max-w-md text-center shadow-xl border-border/50 bg-card/80">
           <CardContent className="p-8">
             <div className="w-20 h-20 rounded-full bg-primary/15 flex items-center justify-center mx-auto mb-6 animate-scale-in glow-primary">
-              {opening ? (
-                <Loader2 className="h-10 w-10 text-primary animate-spin" />
-              ) : (
-                <Check className="h-10 w-10 text-primary" />
-              )}
+              <Check className="h-10 w-10 text-primary" />
             </div>
-            <h2 className="text-2xl font-bold text-foreground mb-2">
-              {opening ? 'Abrindo WhatsApp...' : 'Seleção Enviada!'}
-            </h2>
+            <h2 className="text-2xl font-bold text-foreground mb-2">Seleção Enviada!</h2>
             <p className="text-muted-foreground mb-8">
-              {opening
-                ? 'Aguarde, estamos redirecionando você...'
-                : `Suas ${selectedPhotos.length} fotos foram registradas. O fotógrafo entrará em contato pelo WhatsApp.`}
+              {`Suas ${selectedPhotos.length} fotos foram registradas. O fotógrafo entrará em contato pelo WhatsApp.`}
             </p>
-            {!opening && (
-              <div className="space-y-3">
-                <Button
-                  onClick={() => {
-                    const targetWa = photographerWa || getCleanWhatsapp();
-                    const phone = targetWa.startsWith('55') ? targetWa : `55${targetWa}`;
-                    const codes = selectedPhotos.map((p) => p.photo_code).join(', ');
-                    const message = `Olá! Meu nome é *${customerName.trim()}* e quero comprar fotos do evento *${event.name}*\n\n📸 Fotos: ${codes}\n💰 Total: R$ ${totalPrice.toFixed(2).replace('.', ',')}`;
-                    openWhatsApp(phone, message);
-                  }}
-                  variant="outline"
-                  className="w-full min-h-[48px] border-border/50"
-                >
-                  <MessageCircle className="h-5 w-5 mr-2" />
-                  Abrir WhatsApp novamente
-                </Button>
-                <Button onClick={() => navigate('/')} variant="ghost" className="w-full min-h-[48px]">
-                  Voltar ao Início
-                </Button>
-              </div>
-            )}
+            <div className="space-y-3">
+              <Button
+                onClick={() => {
+                  const targetWa = photographerWa || getCleanWhatsapp();
+                  const phone = targetWa.startsWith('55') ? targetWa : `55${targetWa}`;
+                  const codes = selectedPhotos.map((p) => p.photo_code).join(', ');
+                  const message = `Olá! Meu nome é *${customerName.trim()}* e quero comprar fotos do evento *${event.name}*\n\n📸 Fotos: ${codes}\n💰 Total: R$ ${totalPrice.toFixed(2).replace('.', ',')}`;
+                  openWhatsApp(phone, message);
+                }}
+                variant="outline"
+                className="w-full min-h-[48px] border-border/50"
+              >
+                <MessageCircle className="h-5 w-5 mr-2" />
+                Abrir WhatsApp novamente
+              </Button>
+              <Button onClick={() => navigate('/')} variant="ghost" className="w-full min-h-[48px]">
+                Voltar ao Início
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
