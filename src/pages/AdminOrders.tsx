@@ -94,10 +94,19 @@ const AdminOrders = () => {
   }, [fetchSignedUrls]);
 
   const updateStatus = async (selectionId: string, newStatus: string) => {
-    const { error } = await supabase.from('selections').update({ status: newStatus }).eq('id', selectionId);
-    if (error) { toast.error('Erro ao atualizar status.'); return; }
-    setSelections((prev) => prev.map((s) => (s.id === selectionId ? { ...s, status: newStatus } : s)));
-    toast.success('Status atualizado!');
+    try {
+      const { error } = await supabase.from('selections').update({ status: newStatus }).eq('id', selectionId);
+      if (error) {
+        console.error('Status update error:', error);
+        toast.error(`Erro ao atualizar status: ${error.message}`);
+        return;
+      }
+      setSelections((prev) => prev.map((s) => (s.id === selectionId ? { ...s, status: newStatus } : s)));
+      toast.success('Status atualizado!');
+    } catch (err) {
+      console.error('Unexpected status update error:', err);
+      toast.error('Erro inesperado ao atualizar status.');
+    }
   };
 
   const copyPhotoCodes = (codes: string[]) => {
