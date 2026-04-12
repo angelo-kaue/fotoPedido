@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowRight, Calendar, ImageOff } from 'lucide-react';
+import { ArrowRight, Calendar, ImageOff, Camera } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import logoFotoPedido from '@/assets/logo-fotopedido.png';
@@ -32,12 +32,15 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-xl py-10">
-        <div className="container mx-auto px-4 flex flex-col items-center text-center gap-4">
-          <img src={logoFotoPedido} alt="FotoPedido" width={64} height={64} className="w-16 h-16 rounded-2xl shadow-lg" />
+      <header className="border-b border-border/50 bg-card/50 backdrop-blur-xl py-12">
+        <div className="container mx-auto px-4 flex flex-col items-center text-center gap-5">
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full scale-150" />
+            <img src={logoFotoPedido} alt="FotoPedido" width={96} height={96} className="relative w-24 h-24 rounded-3xl shadow-2xl shadow-primary/20 object-contain" />
+          </div>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">FotoPedido</h1>
-            <p className="text-muted-foreground mt-1">Selecione um evento para escolher suas fotos</p>
+            <h1 className="text-4xl font-bold text-foreground tracking-tight">FotoPedido</h1>
+            <p className="text-muted-foreground mt-2 text-base">Selecione um evento para escolher suas fotos</p>
           </div>
         </div>
       </header>
@@ -63,14 +66,15 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {events.map((event) => (
               <Link key={event.id} to={`/evento/${event.slug}`}>
-                <Card className="hover:shadow-xl hover:shadow-primary/10 hover:scale-[1.03] hover:border-primary/40 transition-all duration-300 cursor-pointer group border-border/50 bg-card/80 overflow-hidden">
-                  <CardContent className="p-5 flex items-center justify-between gap-4">
+                <Card className="hover:shadow-xl hover:shadow-primary/15 hover:scale-[1.02] hover:border-primary/40 transition-all duration-300 cursor-pointer group border-border/50 bg-card/80 overflow-hidden relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <CardContent className="p-5 flex items-center justify-between gap-4 relative">
                     <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/25 via-primary/10 to-transparent flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/5 group-hover:shadow-primary/15 transition-shadow duration-300">
-                        <img src={logoFotoPedido} alt="" width={36} height={36} className="w-9 h-9 drop-shadow-md" loading="lazy" />
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/30 via-primary/15 to-accent/20 flex items-center justify-center flex-shrink-0 border border-primary/10 group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/10 transition-all duration-300">
+                        <Camera className="h-6 w-6 text-primary/80 group-hover:text-primary transition-colors" />
                       </div>
                       <div className="min-w-0">
-                        <h2 className="text-lg font-bold text-foreground truncate">{event.name}</h2>
+                        <h2 className="text-lg font-bold text-foreground truncate group-hover:text-primary/90 transition-colors">{event.name}</h2>
                         {event.event_date && (
                           <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
                             <Calendar className="h-3.5 w-3.5 text-primary/60" />
