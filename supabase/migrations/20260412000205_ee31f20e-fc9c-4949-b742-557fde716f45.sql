@@ -1,0 +1,2 @@
+ALTER TABLE public.selections DROP CONSTRAINT selections_status_check;
+ALTER TABLE public.selections ADD CONSTRAINT selections_status_check CHECK (status = ANY (ARRAY['pendente'::text, 'editando'::text, 'entregue'::text, 'cancelado'::text]));
