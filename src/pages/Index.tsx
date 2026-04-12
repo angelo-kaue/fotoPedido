@@ -37,7 +37,7 @@ const Index = () => {
           <img src={logoFotoPedido} alt="FotoPedido" width={64} height={64} className="w-16 h-16 rounded-2xl shadow-lg" />
           <div>
             <h1 className="text-3xl font-bold text-foreground">FotoPedido</h1>
-            <p className="text-muted-foreground mt-1">Organize e venda suas fotos com facilidade</p>
+            <p className="text-muted-foreground mt-1">Selecione um evento para escolher suas fotos</p>
           </div>
         </div>
       </header>
@@ -63,23 +63,25 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {events.map((event) => (
               <Link key={event.id} to={`/evento/${event.slug}`}>
-                <Card className="hover:shadow-xl hover:shadow-primary/5 hover:scale-[1.02] hover:border-primary/30 transition-all duration-300 cursor-pointer group border-border/50 bg-card/80">
-                  <CardContent className="p-5 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
-                        <img src={logoFotoPedido} alt="" width={24} height={24} className="w-6 h-6" loading="lazy" />
+                <Card className="hover:shadow-xl hover:shadow-primary/10 hover:scale-[1.03] hover:border-primary/40 transition-all duration-300 cursor-pointer group border-border/50 bg-card/80 overflow-hidden">
+                  <CardContent className="p-5 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/25 via-primary/10 to-transparent flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/5 group-hover:shadow-primary/15 transition-shadow duration-300">
+                        <img src={logoFotoPedido} alt="" width={36} height={36} className="w-9 h-9 drop-shadow-md" loading="lazy" />
                       </div>
-                      <div>
-                        <h2 className="text-lg font-semibold text-foreground">{event.name}</h2>
+                      <div className="min-w-0">
+                        <h2 className="text-lg font-bold text-foreground truncate">{event.name}</h2>
                         {event.event_date && (
-                          <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(event.event_date).toLocaleDateString('pt-BR')}
+                          <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+                            <Calendar className="h-3.5 w-3.5 text-primary/60" />
+                            {new Date(event.event_date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                           </p>
                         )}
                       </div>
                     </div>
-                    <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
+                      <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                    </div>
                   </CardContent>
                 </Card>
               </Link>
