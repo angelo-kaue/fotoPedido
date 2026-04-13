@@ -58,6 +58,38 @@ export type Database = {
           },
         ]
       }
+      event_visits: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          ip_hash: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          ip_hash?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          ip_hash?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_visits_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string
