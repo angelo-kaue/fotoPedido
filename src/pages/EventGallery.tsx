@@ -13,6 +13,7 @@ import PhotoPreviewModal from '@/components/PhotoPreviewModal';
 import PhotoCardComponent from '@/components/gallery/PhotoCard';
 import FeaturedSection from '@/components/gallery/FeaturedSection';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useVisitTracker } from '@/hooks/useVisitTracker';
 
 interface Photo {
   id: string;
