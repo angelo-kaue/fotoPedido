@@ -30,98 +30,87 @@ const ProtectedImage = ({ src, alt, watermarkText, className, onClick, onLoad }:
       canvas.width = w;
       canvas.height = h;
 
-      // Always clear first
       ctx.clearRect(0, 0, w, h);
-
-      // Draw photo
       ctx.drawImage(img, 0, 0);
 
-      const diag = Math.sqrt(w * w + h * h);
+      const font = '"Segoe UI", "Helvetica Neue", Arial, sans-serif';
 
-      // ===== LAYER 2: Dense diagonal grid (draw FIRST, behind center) =====
+      // ===== LAYER 1: 4 sparse quadrant watermarks (drawn first, behind center) =====
       ctx.save();
-      const gridFontSize = Math.max(14, w * 0.10);
-      const gridSpacing = Math.max(40, w * 0.15);
-      ctx.font = `900 ${gridFontSize}px "Segoe UI", "Helvetica Neue", Arial, sans-serif`;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+      const sparseSize = Math.max(14, w * 0.17);
+      ctx.font = `900 ${sparseSize}px ${font}`;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+      ctx.shadowBlur = 4;
 
-      // Rotate entire context for diagonal pattern
-      ctx.translate(w / 2, h / 2);
-      ctx.rotate(-20 * Math.PI / 180);
+      const positions = [
+        { x: w * 0.25, y: h * 0.25 },  // top-left quadrant
+        { x: w * 0.75, y: h * 0.25 },  // top-right quadrant
+        { x: w * 0.25, y: h * 0.75 },  // bottom-left quadrant
+        { x: w * 0.75, y: h * 0.75 },  // bottom-right quadrant
+      ];
 
-      const cols = Math.ceil(diag / gridSpacing) + 2;
-      const rows = Math.ceil(diag / gridSpacing) + 2;
-
-      for (let row = -rows; row <= rows; row++) {
-        for (let col = -cols; col <= cols; col++) {
-          const x = col * gridSpacing;
-          const y = row * gridSpacing;
-          ctx.fillText('FotoPedido', x, y);
-        }
+      for (const pos of positions) {
+        ctx.save();
+        ctx.translate(pos.x, pos.y);
+        ctx.rotate(-20 * Math.PI / 180);
+        ctx.fillText('FotoPedido', 0, 0);
+        ctx.restore();
       }
       ctx.restore();
 
-      // ===== LAYER 1: Center watermark (dominant brand) =====
+      // ===== LAYER 2: Center watermark (dominant brand) =====
       ctx.save();
       ctx.translate(w / 2, h / 2);
       ctx.rotate(-20 * Math.PI / 180);
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      let fontSize = w * 0.40;
-      ctx.font = `900 ${fontSize}px "Segoe UI", "Helvetica Neue", Arial, sans-serif`;
+      let fontSize = w * 0.35;
+      ctx.font = `900 ${fontSize}px ${font}`;
       const maxTextWidth = w * 0.85;
       const measured = ctx.measureText('FotoPedido');
       if (measured.width > maxTextWidth) {
         fontSize = fontSize * (maxTextWidth / measured.width);
-        ctx.font = `900 ${fontSize}px "Segoe UI", "Helvetica Neue", Arial, sans-serif`;
+        ctx.font = `900 ${fontSize}px ${font}`;
       }
 
-      // Strong shadow
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
-      ctx.shadowBlur = Math.max(8, fontSize / 6);
-      ctx.shadowOffsetX = 3;
-      ctx.shadowOffsetY = 3;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = Math.max(6, fontSize / 8);
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
 
-      // Black stroke
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
-      ctx.lineWidth = Math.max(2, fontSize / 30);
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
+      ctx.lineWidth = Math.max(1.5, fontSize / 40);
       ctx.strokeText('FotoPedido', 0, 0);
 
-      // White fill at 78% opacity
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.78)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.68)';
       ctx.fillText('FotoPedido', 0, 0);
       ctx.restore();
 
-      // ===== LAYER 3: Strong corner labels =====
+      // ===== LAYER 3: Corner labels =====
       ctx.save();
-      const labelSize = Math.max(18, w * 0.04);
-      ctx.font = `800 ${labelSize}px "Segoe UI", Arial, sans-serif`;
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-      ctx.shadowBlur = 4;
-      ctx.shadowOffsetX = 1;
-      ctx.shadowOffsetY = 1;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+      const labelSize = Math.max(16, w * 0.035);
+      ctx.font = `700 ${labelSize}px ${font}`;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+      ctx.shadowBlur = 3;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
       const pad = labelSize * 1.2;
 
-      // Top-left
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
       ctx.fillText('PREVIEW', pad, pad);
 
-      // Top-right
       ctx.textAlign = 'right';
       ctx.textBaseline = 'top';
       ctx.fillText('PREVIEW', w - pad, pad);
 
-      // Bottom-left
       ctx.textAlign = 'left';
       ctx.textBaseline = 'bottom';
       ctx.fillText('NÃO COPIE', pad, h - pad);
 
-      // Bottom-right
       ctx.textAlign = 'right';
       ctx.textBaseline = 'bottom';
       ctx.fillText('NÃO COPIE', w - pad, h - pad);
