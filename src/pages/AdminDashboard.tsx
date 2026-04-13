@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, LogOut, Image, ShoppingCart, Calendar, Settings, ChevronRight, FolderOpen, Trash2 } from 'lucide-react';
+import { Plus, LogOut, Image, ShoppingCart, Calendar, Settings, ChevronRight, FolderOpen, Trash2, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import logoFotoPedido from '@/assets/logo-fotopedido.png';
 
@@ -149,11 +149,11 @@ const AdminDashboard = () => {
           <div className="space-y-3">
             {events.map((event) => (
               <Link key={event.id} to={`/admin/evento/${event.id}`}>
-                <Card className="hover:shadow-xl hover:shadow-primary/5 hover:scale-[1.01] hover:border-primary/30 transition-all duration-300 cursor-pointer mb-3 border-border/50 bg-card/80">
+                <Card className="hover:shadow-xl hover:shadow-primary/10 hover:scale-[1.01] hover:border-primary/30 transition-all duration-300 cursor-pointer mb-3 border-border/50 bg-card/80 group">
                   <CardContent className="p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
-                        <img src={logoFotoPedido} alt="" width={24} height={24} className="w-6 h-6" loading="lazy" />
+                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/25 to-primary/5 flex items-center justify-center flex-shrink-0 border border-primary/15 group-hover:border-primary/40 group-hover:shadow-md group-hover:shadow-primary/15 transition-all duration-300">
+                        <Camera className="h-5 w-5 text-primary" />
                       </div>
                       <div className="min-w-0">
                         <h3 className="font-bold text-foreground truncate">{event.name}</h3>
