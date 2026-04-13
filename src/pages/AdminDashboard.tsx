@@ -160,7 +160,7 @@ const AdminDashboard = () => {
                       </div>
                       <div className="min-w-0">
                         <h3 className="font-bold text-foreground truncate">{event.name}</h3>
-                        <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground flex-wrap">
                           {event.event_date && (
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
@@ -171,8 +171,17 @@ const AdminDashboard = () => {
                             <Image className="h-3 w-3" /> {event.photo_count}
                           </span>
                           <span className="flex items-center gap-1">
+                            <Eye className="h-3 w-3" /> {event.visit_count}
+                          </span>
+                          <span className="flex items-center gap-1">
                             <ShoppingCart className="h-3 w-3" /> {event.selection_count}
                           </span>
+                          {event.visit_count > 0 && (
+                            <span className="flex items-center gap-1 text-primary font-semibold">
+                              <TrendingUp className="h-3 w-3" />
+                              {((event.selection_count / event.visit_count) * 100).toFixed(1)}%
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
