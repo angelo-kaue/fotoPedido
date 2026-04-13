@@ -42,11 +42,12 @@ const AdminDashboard = () => {
 
     const eventsWithCounts = await Promise.all(
       eventsData.map(async (event) => {
-        const [{ count: photoCount }, { count: selectionCount }] = await Promise.all([
+        const [{ count: photoCount }, { count: selectionCount }, { count: visitCount }] = await Promise.all([
           supabase.from('event_photos').select('*', { count: 'exact', head: true }).eq('event_id', event.id),
           supabase.from('selections').select('*', { count: 'exact', head: true }).eq('event_id', event.id),
+          supabase.from('event_visits' as any).select('*', { count: 'exact', head: true }).eq('event_id', event.id),
         ]);
-        return { ...event, photo_count: photoCount || 0, selection_count: selectionCount || 0 };
+        return { ...event, photo_count: photoCount || 0, selection_count: selectionCount || 0, visit_count: visitCount || 0 };
       })
     );
     setEvents(eventsWithCounts);
