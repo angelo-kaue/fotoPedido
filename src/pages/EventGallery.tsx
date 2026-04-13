@@ -97,6 +97,9 @@ const EventGallery = () => {
     fetchEvent();
   }, [slug, navigate]);
 
+  // Track visit (async, deduped via localStorage)
+  useVisitTracker(event?.id);
+
   const fetchPhotos = useCallback(async () => {
     if (!event) return;
     const from = page * BATCH_SIZE;
