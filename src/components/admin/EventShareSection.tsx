@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Copy, Download, Link2, QrCode, Check } from 'lucide-react';
+import { Copy, Download, Link2, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import QRCode from 'qrcode';
 
