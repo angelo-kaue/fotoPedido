@@ -8,6 +8,7 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import BulkPhotoUploader from '@/components/BulkPhotoUploader';
 import AdminPhotoManager from '@/components/admin/AdminPhotoManager';
+import EventShareSection from '@/components/admin/EventShareSection';
 
 const AdminEventForm = () => {
   const { id } = useParams<{ id: string }>();
@@ -172,6 +173,7 @@ const AdminEventForm = () => {
               eventId={id}
               onPhotoDeleted={() => setExistingPhotoCount(prev => Math.max(0, prev - 1))}
             />
+            {slug && <EventShareSection slug={slug} />}
           </>
         )}
       </main>
