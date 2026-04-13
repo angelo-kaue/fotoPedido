@@ -94,23 +94,23 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border/50 bg-card/60 backdrop-blur-xl py-3">
-        <div className="container mx-auto px-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={logoFotoPedido} alt="FotoPedido" width={36} height={36} className="w-9 h-9 rounded-lg shadow-sm" />
-            <h1 className="text-lg font-bold text-foreground">FotoPedido</h1>
+        <div className="container mx-auto px-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <img src={logoFotoPedido} alt="FotoPedido" width={36} height={36} className="w-9 h-9 rounded-lg shadow-sm flex-shrink-0" />
+            <h1 className="text-lg font-bold text-foreground truncate hidden sm:block">FotoPedido</h1>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 flex-shrink-0">
             <Link to="/admin/pedidos">
-              <Button variant="outline" size="sm" className="min-h-[44px] rounded-xl border-border/50 hover:bg-primary/10 hover:border-primary/30">
-                <ShoppingCart className="h-4 w-4 mr-1" /> Pedidos
+              <Button variant="outline" size="sm" className="min-h-[40px] rounded-xl border-border/50 hover:bg-primary/10 hover:border-primary/30 px-2.5 sm:px-3">
+                <ShoppingCart className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Pedidos</span>
               </Button>
             </Link>
             <Link to="/admin/configuracoes">
-              <Button variant="outline" size="sm" className="min-h-[44px] rounded-xl border-border/50 hover:bg-primary/10 hover:border-primary/30">
-                <Settings className="h-4 w-4 mr-1" /> Config
+              <Button variant="outline" size="sm" className="min-h-[40px] rounded-xl border-border/50 hover:bg-primary/10 hover:border-primary/30 px-2.5 sm:px-3">
+                <Settings className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Config</span>
               </Button>
             </Link>
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="min-h-[44px] hover:bg-destructive/10 hover:text-destructive">
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="min-h-[40px] hover:bg-destructive/10 hover:text-destructive px-2.5">
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
