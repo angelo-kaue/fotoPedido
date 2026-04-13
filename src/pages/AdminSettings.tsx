@@ -155,18 +155,31 @@ const AdminSettings = () => {
                 className="min-h-[48px] mt-1 bg-secondary/50 border-border/50 focus-visible:ring-primary"
               />
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50 bg-card/80 relative overflow-hidden">
+          <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-amber-500/15 text-amber-400 text-xs font-semibold px-2.5 py-1 rounded-full border border-amber-500/30">
+            <Lock className="h-3 w-3" />
+            Premium
+          </div>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              Marca d'água
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-foreground">Texto da marca d'água</label>
+              <label className="text-sm font-medium text-muted-foreground">Texto da marca d'água</label>
               <Input
                 value={form.watermark_text}
-                onChange={(e) => setForm((f) => ({ ...f, watermark_text: e.target.value }))}
-                placeholder="AMOSTRA"
-                className="min-h-[48px] mt-1 bg-secondary/50 border-border/50 focus-visible:ring-primary"
+                disabled
+                className="min-h-[48px] mt-1 bg-secondary/30 border-border/30 opacity-60 cursor-not-allowed"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Exibido sobre as fotos na galeria pública.
-              </p>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Personalização da marca d'água disponível no plano <span className="text-amber-400 font-semibold">Premium</span>.
+            </p>
           </CardContent>
         </Card>
 
