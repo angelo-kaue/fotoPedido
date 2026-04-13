@@ -176,12 +176,17 @@ const AdminDashboard = () => {
                           <span className="flex items-center gap-1">
                             <ShoppingCart className="h-3 w-3" /> {event.selection_count}
                           </span>
-                          {event.visit_count > 0 && (
-                            <span className="flex items-center gap-1 text-primary font-semibold">
-                              <TrendingUp className="h-3 w-3" />
-                              {((event.selection_count / event.visit_count) * 100).toFixed(1)}%
-                            </span>
-                          )}
+                          {event.visit_count > 0 && (() => {
+                            const rate = (event.selection_count / event.visit_count) * 100;
+                            const display = rate % 1 === 0 ? rate.toFixed(0) : rate.toFixed(1);
+                            const color = rate >= 10 ? 'text-green-400' : rate >= 5 ? 'text-yellow-400' : 'text-red-400';
+                            return (
+                              <span className={`flex items-center gap-1 font-semibold ${color}`}>
+                                <TrendingUp className="h-3 w-3" />
+                                {display}%
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
