@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 
 interface ProtectedImageProps {
   src: string | null;
@@ -12,8 +12,10 @@ interface ProtectedImageProps {
 const ProtectedImage = ({ src, alt, watermarkText, className, onClick, onLoad }: ProtectedImageProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [loaded, setLoaded] = useState(false);
+  const onLoadRef = useRef(onLoad);
+  onLoadRef.current = onLoad;
 
-  useEffect(() => {
+  const draw = useCallback(() => {
     if (!src || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
@@ -28,94 +30,112 @@ const ProtectedImage = ({ src, alt, watermarkText, className, onClick, onLoad }:
       canvas.width = w;
       canvas.height = h;
 
-      // Clear completely
+      // Always clear first
       ctx.clearRect(0, 0, w, h);
 
-      // Draw image
+      // Draw photo
       ctx.drawImage(img, 0, 0);
 
-      // --- 1. Diagonal dashed grid overlay ---
-      ctx.save();
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-      ctx.lineWidth = Math.max(1, w / 800);
-      ctx.setLineDash([Math.max(4, w / 100), Math.max(6, w / 60)]);
-      const spacing = Math.max(60, w / 8);
       const diag = Math.sqrt(w * w + h * h);
-      // Forward diagonals
-      for (let offset = -diag; offset < diag; offset += spacing) {
-        ctx.beginPath();
-        ctx.moveTo(offset, 0);
-        ctx.lineTo(offset + h, h);
-        ctx.stroke();
-      }
-      // Backward diagonals
-      for (let offset = -diag; offset < diag; offset += spacing) {
-        ctx.beginPath();
-        ctx.moveTo(w - offset, 0);
-        ctx.lineTo(w - offset - h, h);
-        ctx.stroke();
+
+      // ===== LAYER 2: Dense diagonal grid (draw FIRST, behind center) =====
+      ctx.save();
+      const gridFontSize = Math.max(14, w * 0.10);
+      const gridSpacing = Math.max(40, w * 0.15);
+      ctx.font = `900 ${gridFontSize}px "Segoe UI", "Helvetica Neue", Arial, sans-serif`;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Rotate entire context for diagonal pattern
+      ctx.translate(w / 2, h / 2);
+      ctx.rotate(-20 * Math.PI / 180);
+
+      const cols = Math.ceil(diag / gridSpacing) + 2;
+      const rows = Math.ceil(diag / gridSpacing) + 2;
+
+      for (let row = -rows; row <= rows; row++) {
+        for (let col = -cols; col <= cols; col++) {
+          const x = col * gridSpacing;
+          const y = row * gridSpacing;
+          ctx.fillText('FotoPedido', x, y);
+        }
       }
       ctx.restore();
 
-      // --- 2. Center branded text ---
+      // ===== LAYER 1: Center watermark (dominant brand) =====
       ctx.save();
       ctx.translate(w / 2, h / 2);
       ctx.rotate(-20 * Math.PI / 180);
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      // Dynamic font size: 35% of width, but cap so it fits
-      let fontSize = w * 0.35;
+      let fontSize = w * 0.40;
       ctx.font = `900 ${fontSize}px "Segoe UI", "Helvetica Neue", Arial, sans-serif`;
-      let measured = ctx.measureText('FotoPedido');
-      // Shrink if too wide (accounting for rotation)
       const maxTextWidth = w * 0.85;
+      const measured = ctx.measureText('FotoPedido');
       if (measured.width > maxTextWidth) {
         fontSize = fontSize * (maxTextWidth / measured.width);
         ctx.font = `900 ${fontSize}px "Segoe UI", "Helvetica Neue", Arial, sans-serif`;
       }
 
-      // Shadow for contrast
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-      ctx.shadowBlur = Math.max(4, fontSize / 10);
-      ctx.shadowOffsetX = 2;
-      ctx.shadowOffsetY = 2;
+      // Strong shadow
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+      ctx.shadowBlur = Math.max(8, fontSize / 6);
+      ctx.shadowOffsetX = 3;
+      ctx.shadowOffsetY = 3;
 
-      // Stroke
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-      ctx.lineWidth = Math.max(1, fontSize / 40);
+      // Black stroke
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.lineWidth = Math.max(2, fontSize / 30);
       ctx.strokeText('FotoPedido', 0, 0);
 
-      // Fill
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.70)';
+      // White fill at 78% opacity
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.78)';
       ctx.fillText('FotoPedido', 0, 0);
       ctx.restore();
 
-      // --- 3. Anti-copy labels ---
+      // ===== LAYER 3: Strong corner labels =====
       ctx.save();
-      const labelSize = Math.max(12, w / 50);
-      ctx.font = `700 ${labelSize}px "Segoe UI", Arial, sans-serif`;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.40)';
+      const labelSize = Math.max(18, w * 0.04);
+      ctx.font = `800 ${labelSize}px "Segoe UI", Arial, sans-serif`;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetX = 1;
+      ctx.shadowOffsetY = 1;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+      const pad = labelSize * 1.2;
+
+      // Top-left
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText('PREVIEW', pad, pad);
 
       // Top-right
       ctx.textAlign = 'right';
       ctx.textBaseline = 'top';
-      ctx.fillText('PREVIEW', w - labelSize * 0.8, labelSize * 0.8);
+      ctx.fillText('PREVIEW', w - pad, pad);
 
       // Bottom-left
       ctx.textAlign = 'left';
       ctx.textBaseline = 'bottom';
-      ctx.fillText('#NOCOPY', labelSize * 0.8, h - labelSize * 0.8);
+      ctx.fillText('NÃO COPIE', pad, h - pad);
+
+      // Bottom-right
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('NÃO COPIE', w - pad, h - pad);
+
       ctx.restore();
 
       setLoaded(true);
-      onLoad?.();
+      onLoadRef.current?.();
     };
-    img.onerror = () => {
-      setLoaded(false);
-    };
+    img.onerror = () => setLoaded(false);
     img.src = src;
-  }, [src, watermarkText, onLoad]);
+  }, [src]);
+
+  useEffect(() => { draw(); }, [draw]);
 
   return (
     <canvas
