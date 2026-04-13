@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowRight, Calendar, ImageOff, Camera } from 'lucide-react';
+import { formatDateBR } from '@/lib/date-utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import logoFotoPedido from '@/assets/logo-fotopedido.png';
@@ -90,7 +91,7 @@ const Index = () => {
                         {event.event_date && (
                           <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
                             <Calendar className="h-3.5 w-3.5 text-primary/60" />
-                            {new Date(event.event_date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                            {formatDateBR(event.event_date, { long: true })}
                           </p>
                         )}
                       </div>
