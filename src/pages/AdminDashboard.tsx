@@ -99,7 +99,7 @@ const AdminDashboard = () => {
         <div className="container mx-auto px-4 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <img src={logoFotoPedido} alt="FotoPedido" width={36} height={36} className="w-9 h-9 rounded-lg shadow-sm flex-shrink-0" />
-            <h1 className="text-lg font-bold text-foreground truncate hidden sm:block">FotoPedido</h1>
+            <h1 className="text-lg font-bold text-foreground truncate">FotoPedido</h1>
           </div>
           <div className="flex gap-1.5 flex-shrink-0">
             <Link to="/admin/pedidos">
