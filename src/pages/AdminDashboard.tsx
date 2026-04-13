@@ -162,7 +162,7 @@ const AdminDashboard = () => {
                           {event.event_date && (
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
-                              {new Date(event.event_date).toLocaleDateString('pt-BR')}
+                              {formatDateBR(event.event_date)}
                             </span>
                           )}
                           <span className="flex items-center gap-1">
