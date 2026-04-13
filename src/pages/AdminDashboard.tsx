@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, LogOut, Image, ShoppingCart, Calendar, Settings, ChevronRight, FolderOpen, Trash2, Camera } from 'lucide-react';
+import { Plus, LogOut, Image, ShoppingCart, Calendar, Settings, ChevronRight, FolderOpen, Trash2, Camera, Eye, TrendingUp } from 'lucide-react';
 import { formatDateBR } from '@/lib/date-utils';
 import { toast } from 'sonner';
 import logoFotoPedido from '@/assets/logo-fotopedido.png';
@@ -19,6 +19,7 @@ interface EventWithCount {
   price_per_photo: number;
   photo_count: number;
   selection_count: number;
+  visit_count: number;
 }
 
 const AdminDashboard = () => {
@@ -41,11 +42,12 @@ const AdminDashboard = () => {
 
     const eventsWithCounts = await Promise.all(
       eventsData.map(async (event) => {
-        const [{ count: photoCount }, { count: selectionCount }] = await Promise.all([
+        const [{ count: photoCount }, { count: selectionCount }, { count: visitCount }] = await Promise.all([
           supabase.from('event_photos').select('*', { count: 'exact', head: true }).eq('event_id', event.id),
           supabase.from('selections').select('*', { count: 'exact', head: true }).eq('event_id', event.id),
+          supabase.from('event_visits' as any).select('*', { count: 'exact', head: true }).eq('event_id', event.id),
         ]);
-        return { ...event, photo_count: photoCount || 0, selection_count: selectionCount || 0 };
+        return { ...event, photo_count: photoCount || 0, selection_count: selectionCount || 0, visit_count: visitCount || 0 };
       })
     );
     setEvents(eventsWithCounts);
@@ -158,7 +160,7 @@ const AdminDashboard = () => {
                       </div>
                       <div className="min-w-0">
                         <h3 className="font-bold text-foreground truncate">{event.name}</h3>
-                        <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground flex-wrap">
                           {event.event_date && (
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
@@ -169,8 +171,17 @@ const AdminDashboard = () => {
                             <Image className="h-3 w-3" /> {event.photo_count}
                           </span>
                           <span className="flex items-center gap-1">
+                            <Eye className="h-3 w-3" /> {event.visit_count}
+                          </span>
+                          <span className="flex items-center gap-1">
                             <ShoppingCart className="h-3 w-3" /> {event.selection_count}
                           </span>
+                          {event.visit_count > 0 && (
+                            <span className="flex items-center gap-1 text-primary font-semibold">
+                              <TrendingUp className="h-3 w-3" />
+                              {((event.selection_count / event.visit_count) * 100).toFixed(1)}%
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -13,6 +13,7 @@ import PhotoPreviewModal from '@/components/PhotoPreviewModal';
 import PhotoCardComponent from '@/components/gallery/PhotoCard';
 import FeaturedSection from '@/components/gallery/FeaturedSection';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useVisitTracker } from '@/hooks/useVisitTracker';
 
 interface Photo {
   id: string;
@@ -95,6 +96,9 @@ const EventGallery = () => {
     };
     fetchEvent();
   }, [slug, navigate]);
+
+  // Track visit (async, deduped via localStorage)
+  useVisitTracker(event?.id);
 
   const fetchPhotos = useCallback(async () => {
     if (!event) return;
