@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, LogOut, Image, ShoppingCart, Calendar, Settings, ChevronRight, FolderOpen, Trash2, Camera } from 'lucide-react';
+import { formatDateBR } from '@/lib/date-utils';
 import { toast } from 'sonner';
 import logoFotoPedido from '@/assets/logo-fotopedido.png';
 

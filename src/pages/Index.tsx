@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowRight, Calendar, ImageOff, Camera } from 'lucide-react';
+import { formatDateBR } from '@/lib/date-utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import logoFotoPedido from '@/assets/logo-fotopedido.png';
