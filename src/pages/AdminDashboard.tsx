@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, LogOut, Image, ShoppingCart, Calendar, Settings, ChevronRight, FolderOpen, Trash2, Camera, Eye, TrendingUp } from 'lucide-react';
+import { Plus, LogOut, Image, ShoppingCart, Calendar, Settings, ChevronRight, FolderOpen, Trash2, Camera, Eye, TrendingUp, Users, BarChart3 } from 'lucide-react';
 import { formatDateBR } from '@/lib/date-utils';
 import { toast } from 'sonner';
 import logoFotoPedido from '@/assets/logo-fotopedido.png';
@@ -102,6 +102,16 @@ const AdminDashboard = () => {
             <h1 className="text-lg font-bold text-foreground truncate">FotoPedido</h1>
           </div>
           <div className="flex gap-1.5 flex-shrink-0">
+            <Link to="/admin/dashboard">
+              <Button variant="outline" size="sm" className="min-h-[40px] rounded-xl border-border/50 hover:bg-primary/10 hover:border-primary/30 px-2.5 sm:px-3">
+                <BarChart3 className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Dashboard</span>
+              </Button>
+            </Link>
+            <Link to="/admin/atendimentos">
+              <Button variant="outline" size="sm" className="min-h-[40px] rounded-xl border-border/50 hover:bg-primary/10 hover:border-primary/30 px-2.5 sm:px-3">
+                <Users className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Atendimentos</span>
+              </Button>
+            </Link>
             <Link to="/admin/pedidos">
               <Button variant="outline" size="sm" className="min-h-[40px] rounded-xl border-border/50 hover:bg-primary/10 hover:border-primary/30 px-2.5 sm:px-3">
                 <ShoppingCart className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Pedidos</span>
