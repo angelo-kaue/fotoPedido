@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Phone, Search, Users } from 'lucide-react';
 import { toast } from 'sonner';
+import EditConfirmationModal from '@/components/admin/EditConfirmationModal';
 
 interface Atendimento {
   id: string;
@@ -38,6 +39,20 @@ const PAYMENT_OPTIONS = [
 
 const PAGE_SIZE = 50;
 
+const FIELD_LABELS: Record<string, string> = {
+  quantity: 'Quantidade',
+  final_price: 'Valor',
+  payment_method: 'Pagamento',
+  status: 'Status',
+};
+
+const formatFieldValue = (field: string, value: any): string => {
+  if (field === 'status') return STATUS_OPTIONS.find(s => s.value === value)?.label || value;
+  if (field === 'payment_method') return PAYMENT_OPTIONS.find(p => p.value === value)?.label || value;
+  if (field === 'final_price') return `R$ ${Number(value).toFixed(2).replace('.', ',')}`;
+  return String(value);
+};
+
 const AdminAtendimentos = () => {
   const navigate = useNavigate();
   const [atendimentos, setAtendimentos] = useState<Atendimento[]>([]);
@@ -45,7 +60,19 @@ const AdminAtendimentos = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  
+
+  // Pending edit state
+  const [pendingEdit, setPendingEdit] = useState<{
+    id: string;
+    field: string;
+    oldValue: any;
+    newValue: any;
+  } | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+
+  // Local draft values for inputs (so we don't auto-save)
+  const [drafts, setDrafts] = useState<Record<string, Partial<Atendimento>>>({});
 
   const fetchAtendimentos = useCallback(async (pageNum: number, searchTerm: string, append = false) => {
     setLoading(true);
@@ -73,6 +100,7 @@ const AdminAtendimentos = () => {
 
     setHasMore(mapped.length === PAGE_SIZE);
     setAtendimentos(prev => append ? [...prev, ...mapped] : mapped);
+    setDrafts({});
     setLoading(false);
   }, []);
 
@@ -91,18 +119,103 @@ const AdminAtendimentos = () => {
     fetchAtendimentos(next, search, true);
   };
 
-  const updateField = async (id: string, field: string, value: any) => {
-    const updateData: Record<string, any> = { [field]: value };
+  // Get current display value (draft or actual)
+  const getValue = (a: Atendimento, field: keyof Atendimento) => {
+    return drafts[a.id]?.[field] ?? a[field];
+  };
+
+  // Stage a change (no save yet)
+  const stageChange = (id: string, field: string, value: any) => {
+    setDrafts(prev => ({
+      ...prev,
+      [id]: { ...prev[id], [field]: value },
+    }));
+  };
+
+  // Request confirmation for a staged change
+  const requestConfirmation = (a: Atendimento, field: string, newValue: any) => {
+    // Validation
+    if (field === 'quantity' && (isNaN(newValue) || newValue < 0)) {
+      toast.error('Quantidade deve ser >= 0');
+      return;
+    }
+    if (field === 'final_price' && (isNaN(newValue) || newValue < 0)) {
+      toast.error('Valor deve ser >= 0');
+      return;
+    }
+    if (field === 'status' && newValue === 'pago' && getValue(a, 'payment_method') === '') {
+      toast.error('Defina o método de pagamento antes de marcar como pago');
+      return;
+    }
+
+    const oldValue = a[field as keyof Atendimento];
+    if (String(oldValue) === String(newValue)) return; // No change
+
+    setPendingEdit({ id: a.id, field, oldValue, newValue });
+  };
+
+  // Confirm and apply the edit
+  const confirmEdit = async () => {
+    if (!pendingEdit) return;
+    setConfirmLoading(true);
+
+    const { id, field, oldValue, newValue } = pendingEdit;
+    const atendimento = atendimentos.find(a => a.id === id);
+
+    const updateData: Record<string, any> = { [field]: newValue };
     const { error } = await supabase
       .from('atendimentos')
       .update(updateData as any)
       .eq('id', id);
+
     if (error) {
       toast.error('Erro ao atualizar');
+      setConfirmLoading(false);
       return;
     }
-    setAtendimentos(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
-    toast.success('Atualizado!');
+
+    // Log edit history
+    const { data: userData } = await supabase.auth.getUser();
+    await supabase.from('order_edit_history').insert({
+      order_id: id,
+      [`previous_${field === 'final_price' ? 'price' : field}`]: field === 'quantity' ? Number(oldValue) : field === 'final_price' ? Number(oldValue) : String(oldValue),
+      [`new_${field === 'final_price' ? 'price' : field}`]: field === 'quantity' ? Number(newValue) : field === 'final_price' ? Number(newValue) : String(newValue),
+      edited_by: userData?.user?.id || null,
+    } as any);
+
+    // Update local state
+    setAtendimentos(prev => prev.map(a => a.id === id ? { ...a, [field]: newValue } : a));
+    setDrafts(prev => {
+      const copy = { ...prev };
+      if (copy[id]) {
+        delete copy[id][field as keyof Atendimento];
+        if (Object.keys(copy[id]).length === 0) delete copy[id];
+      }
+      return copy;
+    });
+
+    // Highlight row
+    setHighlightedId(id);
+    setTimeout(() => setHighlightedId(null), 1500);
+
+    setPendingEdit(null);
+    setConfirmLoading(false);
+    toast.success('Atendimento atualizado! Dashboard atualizado automaticamente.');
+  };
+
+  const cancelEdit = () => {
+    if (pendingEdit) {
+      // Revert draft for this field
+      setDrafts(prev => {
+        const copy = { ...prev };
+        if (copy[pendingEdit.id]) {
+          delete copy[pendingEdit.id][pendingEdit.field as keyof Atendimento];
+          if (Object.keys(copy[pendingEdit.id]).length === 0) delete copy[pendingEdit.id];
+        }
+        return copy;
+      });
+    }
+    setPendingEdit(null);
   };
 
   const formatWhatsapp = (wa: string) => {
@@ -116,6 +229,14 @@ const AdminAtendimentos = () => {
       day: '2-digit', month: '2-digit', year: 'numeric',
       hour: '2-digit', minute: '2-digit',
     });
+
+  const confirmChanges = pendingEdit
+    ? [{
+        label: FIELD_LABELS[pendingEdit.field] || pendingEdit.field,
+        oldValue: formatFieldValue(pendingEdit.field, pendingEdit.oldValue),
+        newValue: formatFieldValue(pendingEdit.field, pendingEdit.newValue),
+      }]
+    : [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -160,10 +281,17 @@ const AdminAtendimentos = () => {
         ) : (
           <div className="space-y-3">
             {atendimentos.map((a) => {
-              const statusConfig = STATUS_OPTIONS.find(s => s.value === a.status);
+              const currentStatus = getValue(a, 'status') as string;
+              const statusConfig = STATUS_OPTIONS.find(s => s.value === currentStatus);
+              const isHighlighted = highlightedId === a.id;
 
               return (
-                <Card key={a.id} className="border-border/50 bg-card/80">
+                <Card
+                  key={a.id}
+                  className={`border-border/50 bg-card/80 transition-all duration-700 ${
+                    isHighlighted ? 'ring-2 ring-primary/50 bg-primary/5' : ''
+                  }`}
+                >
                   <CardContent className="p-4 space-y-3">
                     {/* Header */}
                     <div className="flex items-start justify-between">
@@ -172,8 +300,11 @@ const AdminAtendimentos = () => {
                         <p className="text-xs text-muted-foreground">{a.event_name} • {formatDateTime(a.created_at)}</p>
                       </div>
                       <select
-                        value={a.status}
-                        onChange={e => updateField(a.id, 'status', e.target.value)}
+                        value={currentStatus}
+                        onChange={e => {
+                          stageChange(a.id, 'status', e.target.value);
+                          requestConfirmation(a, 'status', e.target.value);
+                        }}
                         className={`text-xs font-semibold px-3 py-1.5 rounded-full border-0 cursor-pointer ${statusConfig?.color || ''}`}
                       >
                         {STATUS_OPTIONS.map(opt => (
@@ -201,9 +332,13 @@ const AdminAtendimentos = () => {
                         <span className="text-xs text-muted-foreground">Qtd:</span>
                         <input
                           type="number"
-                          value={a.quantity}
+                          value={getValue(a, 'quantity')}
                           min={0}
-                          onChange={e => updateField(a.id, 'quantity', parseInt(e.target.value) || 0)}
+                          onChange={e => stageChange(a.id, 'quantity', parseInt(e.target.value) || 0)}
+                          onBlur={e => {
+                            const v = parseInt(e.target.value) || 0;
+                            if (v !== a.quantity) requestConfirmation(a, 'quantity', v);
+                          }}
                           className="w-14 text-sm text-center bg-background border border-border/50 rounded-lg py-1 text-foreground"
                         />
                       </div>
@@ -211,18 +346,25 @@ const AdminAtendimentos = () => {
                         <span className="text-xs text-muted-foreground">Valor:</span>
                         <input
                           type="number"
-                          value={a.final_price}
+                          value={getValue(a, 'final_price')}
                           min={0}
                           step={0.01}
-                          onChange={e => updateField(a.id, 'final_price', parseFloat(e.target.value) || 0)}
+                          onChange={e => stageChange(a.id, 'final_price', parseFloat(e.target.value) || 0)}
+                          onBlur={e => {
+                            const v = parseFloat(e.target.value) || 0;
+                            if (v !== a.final_price) requestConfirmation(a, 'final_price', v);
+                          }}
                           className="w-20 text-sm text-center bg-background border border-border/50 rounded-lg py-1 text-foreground"
                         />
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs text-muted-foreground">Pagamento:</span>
                         <select
-                          value={a.payment_method}
-                          onChange={e => updateField(a.id, 'payment_method', e.target.value)}
+                          value={getValue(a, 'payment_method') as string}
+                          onChange={e => {
+                            stageChange(a.id, 'payment_method', e.target.value);
+                            requestConfirmation(a, 'payment_method', e.target.value);
+                          }}
                           className="text-sm bg-background border border-border/50 rounded-lg py-1 px-2 text-foreground cursor-pointer"
                         >
                           {PAYMENT_OPTIONS.map(opt => (
@@ -249,6 +391,14 @@ const AdminAtendimentos = () => {
           </div>
         )}
       </main>
+
+      <EditConfirmationModal
+        open={!!pendingEdit}
+        onClose={cancelEdit}
+        onConfirm={confirmEdit}
+        changes={confirmChanges}
+        loading={confirmLoading}
+      />
     </div>
   );
 };
