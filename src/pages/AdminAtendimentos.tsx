@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Phone, Search, ChevronDown, ChevronUp, Users } from 'lucide-react';
+import { ArrowLeft, Phone, Search, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Atendimento {
@@ -45,7 +45,7 @@ const AdminAtendimentos = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  
 
   const fetchAtendimentos = useCallback(async (pageNum: number, searchTerm: string, append = false) => {
     setLoading(true);
@@ -92,9 +92,10 @@ const AdminAtendimentos = () => {
   };
 
   const updateField = async (id: string, field: string, value: any) => {
+    const updateData: Record<string, any> = { [field]: value };
     const { error } = await supabase
       .from('atendimentos')
-      .update({ [field]: value })
+      .update(updateData as any)
       .eq('id', id);
     if (error) {
       toast.error('Erro ao atualizar');
