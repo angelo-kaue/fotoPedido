@@ -10,6 +10,8 @@ import EventGallery from "./pages/EventGallery";
 import Checkout from "./pages/Checkout";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminDashboardAnalytics from "./pages/AdminDashboardAnalytics";
+import AdminAtendimentos from "./pages/AdminAtendimentos";
 import AdminEventForm from "./pages/AdminEventForm";
 import AdminOrders from "./pages/AdminOrders";
 import AdminSettings from "./pages/AdminSettings";
