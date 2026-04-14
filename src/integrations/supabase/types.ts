@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      atendimentos: {
+        Row: {
+          created_at: string
+          customer_name: string
+          event_id: string
+          final_price: number
+          id: string
+          order_id: string | null
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          quantity: number
+          status: Database["public"]["Enums"]["atendimento_status"]
+          updated_at: string
+          whatsapp: string
+        }
+        Insert: {
+          created_at?: string
+          customer_name?: string
+          event_id: string
+          final_price?: number
+          id?: string
+          order_id?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          quantity?: number
+          status?: Database["public"]["Enums"]["atendimento_status"]
+          updated_at?: string
+          whatsapp?: string
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string
+          event_id?: string
+          final_price?: number
+          id?: string
+          order_id?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          quantity?: number
+          status?: Database["public"]["Enums"]["atendimento_status"]
+          updated_at?: string
+          whatsapp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atendimentos_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atendimentos_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "selections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_photos: {
         Row: {
           captured_at: string | null
@@ -263,6 +320,8 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      atendimento_status: "novo" | "em_atendimento" | "pago" | "entregue"
+      payment_method: "pix" | "dinheiro" | "cartao" | "outro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -391,6 +450,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      atendimento_status: ["novo", "em_atendimento", "pago", "entregue"],
+      payment_method: ["pix", "dinheiro", "cartao", "outro"],
     },
   },
 } as const

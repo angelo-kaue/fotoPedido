@@ -10,6 +10,8 @@ import EventGallery from "./pages/EventGallery";
 import Checkout from "./pages/Checkout";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminDashboardAnalytics from "./pages/AdminDashboardAnalytics";
+import AdminAtendimentos from "./pages/AdminAtendimentos";
 import AdminEventForm from "./pages/AdminEventForm";
 import AdminOrders from "./pages/AdminOrders";
 import AdminSettings from "./pages/AdminSettings";
@@ -32,6 +34,8 @@ const App = () => (
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/evento/:id" element={<ProtectedRoute><AdminEventForm /></ProtectedRoute>} />
             <Route path="/admin/pedidos" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
+            <Route path="/admin/atendimentos" element={<ProtectedRoute><AdminAtendimentos /></ProtectedRoute>} />
+            <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboardAnalytics /></ProtectedRoute>} />
             <Route path="/admin/configuracoes" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
