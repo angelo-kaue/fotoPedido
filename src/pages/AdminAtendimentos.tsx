@@ -161,7 +161,6 @@ const AdminAtendimentos = () => {
           <div className="space-y-3">
             {atendimentos.map((a) => {
               const statusConfig = STATUS_OPTIONS.find(s => s.value === a.status);
-              const isEditing = editingId === a.id;
 
               return (
                 <Card key={a.id} className="border-border/50 bg-card/80">
