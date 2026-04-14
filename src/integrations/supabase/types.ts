@@ -180,6 +180,59 @@ export type Database = {
         }
         Relationships: []
       }
+      order_edit_history: {
+        Row: {
+          created_at: string
+          edited_by: string | null
+          id: string
+          new_payment_method: string | null
+          new_price: number | null
+          new_quantity: number | null
+          new_status: string | null
+          order_id: string
+          previous_payment_method: string | null
+          previous_price: number | null
+          previous_quantity: number | null
+          previous_status: string | null
+        }
+        Insert: {
+          created_at?: string
+          edited_by?: string | null
+          id?: string
+          new_payment_method?: string | null
+          new_price?: number | null
+          new_quantity?: number | null
+          new_status?: string | null
+          order_id: string
+          previous_payment_method?: string | null
+          previous_price?: number | null
+          previous_quantity?: number | null
+          previous_status?: string | null
+        }
+        Update: {
+          created_at?: string
+          edited_by?: string | null
+          id?: string
+          new_payment_method?: string | null
+          new_price?: number | null
+          new_quantity?: number | null
+          new_status?: string | null
+          order_id?: string
+          previous_payment_method?: string | null
+          previous_price?: number | null
+          previous_quantity?: number | null
+          previous_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_edit_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "atendimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       photographer_settings: {
         Row: {
           created_at: string
