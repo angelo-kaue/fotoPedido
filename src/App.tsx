@@ -34,6 +34,8 @@ const App = () => (
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/evento/:id" element={<ProtectedRoute><AdminEventForm /></ProtectedRoute>} />
             <Route path="/admin/pedidos" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
+            <Route path="/admin/atendimentos" element={<ProtectedRoute><AdminAtendimentos /></ProtectedRoute>} />
+            <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboardAnalytics /></ProtectedRoute>} />
             <Route path="/admin/configuracoes" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
