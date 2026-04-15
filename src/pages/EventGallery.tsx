@@ -252,40 +252,34 @@ const EventGallery = () => {
           </div>
         ) : timeGroups.length <= 1 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {filteredPhotos.map((photo, index) => (
+              {filteredPhotos.map((photo) => (
               <PhotoCardComponent
                 key={photo.id}
                 photo={photo}
                 isSelected={selectedIds.has(photo.id)}
                 onToggle={() => toggleSelect(photo.id)}
-                onPreview={() => setPreviewIndex(index)}
+                onPreview={() => setPreviewIndex(allPhotosIndexMap.get(photo.id) ?? 0)}
                 signedUrl={getSignedUrl(photo.thumbnail_path)}
                 watermarkText={watermarkText}
               />
             ))}
           </div>
         ) : (
-          (() => {
-            let offset = 0;
-            return timeGroups.map(([label, groupPhotos], gi) => {
-              const currentOffset = offset;
-              offset += groupPhotos.length;
-              return (
-                <TimeGroupSection
-                  key={label}
-                  label={label}
-                  photos={groupPhotos}
-                  selectedIds={selectedIds}
-                  onToggle={toggleSelect}
-                  onPreview={setPreviewIndex}
-                  getSignedUrl={getSignedUrl}
-                  watermarkText={watermarkText}
-                  defaultOpen={gi === 0}
-                  globalIndexOffset={currentOffset}
-                />
-              );
-            });
-          })()
+          timeGroups.map(([label, groupPhotos], gi) => (
+              <TimeGroupSection
+                key={label}
+                label={label}
+                photos={groupPhotos}
+                selectedIds={selectedIds}
+                onToggle={toggleSelect}
+                onPreview={setPreviewIndex}
+                getSignedUrl={getSignedUrl}
+                watermarkText={watermarkText}
+                defaultOpen={gi === 0}
+                globalIndexOffset={0}
+                allPhotosIndexMap={allPhotosIndexMap}
+              />
+          ))
         )}
 
         <div ref={loaderRef} className="py-8 flex justify-center">

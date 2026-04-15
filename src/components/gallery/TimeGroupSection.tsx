@@ -20,6 +20,7 @@ interface TimeGroupSectionProps {
   watermarkText: string;
   defaultOpen: boolean;
   globalIndexOffset: number;
+  allPhotosIndexMap?: Map<string, number>;
 }
 
 const TimeGroupSection = ({
@@ -32,6 +33,7 @@ const TimeGroupSection = ({
   watermarkText,
   defaultOpen,
   globalIndexOffset,
+  allPhotosIndexMap,
 }: TimeGroupSectionProps) => {
   const [open, setOpen] = useState(defaultOpen);
   const selectedInGroup = photos.filter((p) => selectedIds.has(p.id)).length;
@@ -65,7 +67,7 @@ const TimeGroupSection = ({
               photo={photo}
               isSelected={selectedIds.has(photo.id)}
               onToggle={() => onToggle(photo.id)}
-              onPreview={() => onPreview(globalIndexOffset + i)}
+              onPreview={() => onPreview(allPhotosIndexMap?.get(photo.id) ?? (globalIndexOffset + i))}
               signedUrl={getSignedUrl(photo.thumbnail_path)}
               watermarkText={watermarkText}
             />
