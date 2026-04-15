@@ -10,7 +10,7 @@ interface EventShareSectionProps {
   slug: string;
 }
 
-const PUBLISHED_URL = 'https://foto-seleciona-rapidoo.lovable.app';
+const PUBLISHED_URL = 'www.fotopedido.shop';
 
 const EventShareSection = ({ slug }: EventShareSectionProps) => {
   const eventUrl = `${PUBLISHED_URL}/evento/${slug}`;
