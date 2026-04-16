@@ -6,12 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LogIn } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import logoFotoPedido from '@/assets/logo-fotopedido.png';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+    const [forgotLoading, setForgotLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
@@ -60,6 +62,28 @@ const AdminLogin = () => {
               {loading ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
+           <button
+            type="button"
+            disabled={forgotLoading}
+            onClick={async () => {
+              if (!email.trim()) {
+                toast.error('Digite seu email primeiro.');
+                return;
+              }
+              setForgotLoading(true);
+              const redirectTo = "https://fotopedido.shop/reset-password";
+              const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+              if (error) {
+                toast.error('Erro ao enviar email de redefinição.');
+              } else {
+                toast.success('Email de redefinição enviado! Verifique sua caixa de entrada.');
+              }
+              setForgotLoading(false);
+            }}
+            className="w-full text-center text-sm text-muted-foreground hover:text-primary transition-colors mt-3"
+          >
+            {forgotLoading ? 'Enviando...' : 'Esqueceu a senha?'}
+          </button>
         </CardContent>
       </Card>
     </div>
