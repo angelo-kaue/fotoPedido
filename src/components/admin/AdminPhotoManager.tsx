@@ -23,6 +23,7 @@ interface PhotoRow {
   storage_path: string;
   preview_path: string;
   captured_at: string | null;
+  filename: string | null;
 }
 
 interface AdminPhotoManagerProps {
@@ -60,7 +61,7 @@ const AdminPhotoManager = ({ eventId, onPhotoDeleted }: AdminPhotoManagerProps) 
 
     let query = supabase
       .from('event_photos')
-      .select('id, photo_code, thumbnail_path, storage_path, preview_path, captured_at', { count: 'exact' })
+      .select('id, photo_code, thumbnail_path, storage_path, preview_path, captured_at, filename', { count: 'exact' })
       .eq('event_id', eventId)
       .order('sort_order');
 
@@ -191,28 +192,35 @@ const AdminPhotoManager = ({ eventId, onPhotoDeleted }: AdminPhotoManagerProps) 
         ) : (
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[400px] overflow-y-auto">
             {photos.map((photo) => (
-              <div key={photo.id} className="relative group aspect-square rounded-lg overflow-hidden bg-muted">
-                {signedUrls[photo.thumbnail_path] ? (
-                  <img
-                    src={signedUrls[photo.thumbnail_path]}
-                    alt={photo.photo_code}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ImageIcon className="h-6 w-6 text-muted-foreground" />
+              <div key={photo.id} className="space-y-1">
+                <div className="relative group aspect-square rounded-lg overflow-hidden bg-muted">
+                  {signedUrls[photo.thumbnail_path] ? (
+                    <img
+                      src={signedUrls[photo.thumbnail_path]}
+                      alt={photo.photo_code}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="absolute top-1 left-1 bg-foreground/70 text-background text-[10px] font-mono px-1.5 py-0.5 rounded">
+                    {photo.photo_code}
                   </div>
-                )}
-                <div className="absolute top-1 left-1 bg-foreground/70 text-background text-[10px] font-mono px-1.5 py-0.5 rounded">
-                  {photo.photo_code}
+                  <button
+                    onClick={() => handleDeleteClick(photo)}
+                    className="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-destructive/90 text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Excluir foto"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleDeleteClick(photo)}
-                  className="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-destructive/90 text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Excluir foto"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                {photo.filename && (
+                  <p className="text-[10px] text-muted-foreground font-mono truncate" title={photo.filename}>
+                    {photo.filename}
+                  </p>
+                )}
               </div>
             ))}
           </div>

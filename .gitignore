@@ -7,12 +7,21 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Build
 dist
 dist-ssr
+build
+
+# Env files (CRÍTICO)
+.env*
+
+# Local files
 *.local
 
-# Editor directories and files
+# Editor
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -23,8 +32,12 @@ dist-ssr
 *.sln
 *.sw?
 
-node_modules
-.env
+# Supabase
 .supabase
-dist
-build
+supabase/.temp
+supabase/.branches
+supabase/.cache
+
+# Cache
+.cache
+.tmp

@@ -13,6 +13,7 @@ interface PhotoDetail {
   photo_code: string;
   thumbnail_path: string;
   preview_path: string;
+  filename: string | null;
 }
 
 interface Selection {
@@ -63,7 +64,7 @@ const AdminOrders = () => {
         selectionsData.map(async (sel: any) => {
           const { data: photos } = await supabase
             .from('selection_photos')
-            .select('photo_id, event_photos(id, photo_code, thumbnail_path, preview_path)')
+            .select('photo_id, event_photos(id, photo_code, thumbnail_path, preview_path, filename)')
             .eq('selection_id', sel.id);
           const photoDetails: PhotoDetail[] = (photos || []).map((p: any) => p.event_photos).filter(Boolean);
           return {
@@ -112,6 +113,19 @@ const AdminOrders = () => {
   const copyPhotoCodes = (codes: string[]) => {
     navigator.clipboard.writeText(codes.join('\n'));
     toast.success('Códigos copiados!');
+  };
+
+  const copyFilenames = (photos: PhotoDetail[]) => {
+    const names = photos
+      .map((p) => p.filename?.trim())
+      .filter((n): n is string => !!n);
+    if (names.length === 0) {
+      toast.error('Nenhuma foto possui nome de arquivo registrado.');
+      return;
+    }
+    const formatted = names.map((n) => `"${n}"`).join(' ');
+    navigator.clipboard.writeText(formatted);
+    toast.success(`${names.length} nome(s) copiado(s)!`);
   };
 
   const formatWhatsapp = (wa: string) => {
@@ -228,9 +242,12 @@ const AdminOrders = () => {
                         <ImageIcon className="h-4 w-4 text-primary" />
                         {sel.total_photos} fotos • <span className="text-primary font-bold">R$ {Number(sel.total_price).toFixed(2).replace('.', ',')}</span>
                       </p>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
                         <Button variant="outline" size="sm" className="min-h-[36px] rounded-lg border-border/50 hover:bg-primary/10" onClick={() => copyPhotoCodes(sel.photo_codes)}>
-                          <Copy className="h-3.5 w-3.5 mr-1" /> Copiar
+                          <Copy className="h-3.5 w-3.5 mr-1" /> Códigos
+                        </Button>
+                        <Button variant="outline" size="sm" className="min-h-[36px] rounded-lg border-border/50 hover:bg-primary/10" onClick={() => copyFilenames(sel.photos)}>
+                          <Copy className="h-3.5 w-3.5 mr-1" /> Nomes de arquivo
                         </Button>
                         <Button variant="outline" size="sm" className="min-h-[36px] rounded-lg border-border/50 hover:bg-primary/10" onClick={() => handleExpand(sel.id, sel.photos)}>
                           <Eye className="h-3.5 w-3.5 mr-1" /> {isExpanded ? 'Ocultar' : 'Ver fotos'}
@@ -280,7 +297,14 @@ const AdminOrders = () => {
                                   </div>
                                 )}
                               </div>
-                              <p className="text-xs text-center text-muted-foreground font-mono mt-1">{photo.photo_code}</p>
+                              <p className="text-xs text-center text-foreground font-mono mt-1">
+                                {photo.photo_code}
+                                {photo.filename && (
+                                  <span className="block text-[10px] text-muted-foreground truncate" title={photo.filename}>
+                                    ({photo.filename})
+                                  </span>
+                                )}
+                              </p>
                             </div>
                           );
                         })}
@@ -323,6 +347,9 @@ const AdminOrders = () => {
             })()}
             <p className="text-center text-foreground font-mono mt-3 bg-secondary rounded-full px-4 py-1 w-fit mx-auto">
               {previewPhoto.photo_code}
+              {previewPhoto.filename && (
+                <span className="ml-2 text-muted-foreground">({previewPhoto.filename})</span>
+              )}
             </p>
           </div>
         </div>

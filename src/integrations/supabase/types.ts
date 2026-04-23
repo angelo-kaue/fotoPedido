@@ -76,6 +76,7 @@ export type Database = {
           captured_at: string | null
           created_at: string
           event_id: string
+          filename: string | null
           id: string
           photo_code: string
           preview_path: string
@@ -87,6 +88,7 @@ export type Database = {
           captured_at?: string | null
           created_at?: string
           event_id: string
+          filename?: string | null
           id?: string
           photo_code: string
           preview_path: string
@@ -98,6 +100,7 @@ export type Database = {
           captured_at?: string | null
           created_at?: string
           event_id?: string
+          filename?: string | null
           id?: string
           photo_code?: string
           preview_path?: string

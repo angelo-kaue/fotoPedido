@@ -1,0 +1,1 @@
+ALTER TABLE public.event_photos ADD COLUMN filename text;
