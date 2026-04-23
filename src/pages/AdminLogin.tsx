@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -7,15 +7,26 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LogIn } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import logoFotoPedido from '@/assets/logo-fotopedido.png';
+
+const TURNSTILE_SITE_KEY =
+  import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-    const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileInstance | null>(null);
   const { signIn } = useAuth();
   const navigate = useNavigate();
+
+  const resetCaptcha = () => {
+    setCaptchaToken(null);
+    turnstileRef.current?.reset();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,14 +34,43 @@ const AdminLogin = () => {
       toast.error('Preencha todos os campos.');
       return;
     }
+    if (!captchaToken) {
+      toast.error('Confirme que você não é um robô');
+      return;
+    }
     setLoading(true);
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(email, password, captchaToken);
     if (error) {
       toast.error('Email ou senha inválidos.');
+      resetCaptcha();
     } else {
       navigate('/admin');
     }
     setLoading(false);
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      toast.error('Digite seu email primeiro.');
+      return;
+    }
+    if (!captchaToken) {
+      toast.error('Confirme que você não é um robô');
+      return;
+    }
+    setForgotLoading(true);
+    const redirectTo = `${window.location.origin}/reset-password`;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo,
+      captchaToken,
+    });
+    if (error) {
+      toast.error('Erro ao enviar email de redefinição.');
+    } else {
+      toast.success('Email de redefinição enviado! Verifique sua caixa de entrada.');
+    }
+    resetCaptcha();
+    setForgotLoading(false);
   };
 
   return (
@@ -57,29 +97,25 @@ const AdminLogin = () => {
               onChange={(e) => setPassword(e.target.value)}
               className="min-h-[44px] bg-secondary/50 border-border/50 focus-visible:ring-primary"
             />
+            <div className="flex justify-center">
+              <Turnstile
+                ref={turnstileRef}
+                siteKey={TURNSTILE_SITE_KEY}
+                options={{ theme: 'auto', size: 'normal' }}
+                onSuccess={(token) => setCaptchaToken(token)}
+                onExpire={() => setCaptchaToken(null)}
+                onError={() => setCaptchaToken(null)}
+              />
+            </div>
             <Button type="submit" disabled={loading} className="w-full min-h-[44px] bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-400 glow-primary">
               <LogIn className="h-4 w-4 mr-2" />
               {loading ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
-           <button
+          <button
             type="button"
             disabled={forgotLoading}
-            onClick={async () => {
-              if (!email.trim()) {
-                toast.error('Digite seu email primeiro.');
-                return;
-              }
-              setForgotLoading(true);
-              const redirectTo = "https://fotopedido.shop/reset-password";
-              const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
-              if (error) {
-                toast.error('Erro ao enviar email de redefinição.');
-              } else {
-                toast.success('Email de redefinição enviado! Verifique sua caixa de entrada.');
-              }
-              setForgotLoading(false);
-            }}
+            onClick={handleForgotPassword}
             className="w-full text-center text-sm text-muted-foreground hover:text-primary transition-colors mt-3"
           >
             {forgotLoading ? 'Enviando...' : 'Esqueceu a senha?'}
