@@ -28,6 +28,9 @@ interface Event {
   name: string;
   slug: string;
   price_per_photo: number;
+  event_date: string | null;
+  location: string | null;
+  cover_photo_id: string | null;
 }
 
 const BATCH_SIZE = 200;
@@ -58,6 +61,8 @@ const EventGallery = () => {
   const [page, setPage] = useState(0);
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [watermarkText, setWatermarkText] = useState('AMOSTRA');
+  const [photographerName, setPhotographerName] = useState('');
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [searchCode, setSearchCode] = useState('');
   const [selectedTimeGroup, setSelectedTimeGroup] = useState('all');
   const [showSelected, setShowSelected] = useState(false);
@@ -88,14 +93,69 @@ const EventGallery = () => {
     const fetchEvent = async () => {
       if (!slug) return;
       const [{ data }, { data: settings }] = await Promise.all([
-        supabase.from('events').select('id, name, slug, price_per_photo').eq('slug', slug).eq('status', 'active').single(),
-        supabase.from('photographer_settings').select('watermark_text').limit(1).single(),
+        supabase
+          .from('events')
+          .select('id, name, slug, price_per_photo, event_date, location, cover_photo_id' as any)
+          .eq('slug', slug)
+          .eq('status', 'active')
+          .single(),
+        supabase.from('photographer_settings').select('watermark_text, photographer_name').limit(1).single(),
       ]);
-      if (data) { setEvent(data); } else { navigate('/'); toast.error('Evento não encontrado'); }
+      if (data) {
+        setEvent(data as unknown as Event);
+      } else {
+        navigate('/');
+        toast.error('Evento não encontrado');
+      }
       if (settings?.watermark_text) setWatermarkText(settings.watermark_text);
+      if (settings?.photographer_name) setPhotographerName(settings.photographer_name);
     };
     fetchEvent();
   }, [slug, navigate]);
+
+  // Resolve hero cover image (explicit cover_photo_id, or first uploaded photo)
+  useEffect(() => {
+    if (!event) return;
+    let cancelled = false;
+    const loadCover = async () => {
+      let photoPath: string | null = null;
+
+      if (event.cover_photo_id) {
+        const { data } = await supabase
+          .from('event_photos')
+          .select('preview_path, thumbnail_path')
+          .eq('id', event.cover_photo_id)
+          .maybeSingle();
+        if (data) photoPath = data.preview_path || data.thumbnail_path;
+      }
+
+      if (!photoPath) {
+        const { data } = await supabase
+          .from('event_photos')
+          .select('preview_path, thumbnail_path')
+          .eq('event_id', event.id)
+          .order('sort_order', { ascending: true })
+          .order('captured_at', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (data) photoPath = data.preview_path || data.thumbnail_path;
+      }
+
+      if (!photoPath || cancelled) return;
+      try {
+        const { data } = await supabase.functions.invoke('get-signed-urls', {
+          body: { paths: [photoPath], expiresIn: 600 },
+        });
+        if (!cancelled && data?.urls?.[photoPath]) {
+          setCoverUrl(data.urls[photoPath]);
+        }
+      } catch (err) {
+        console.error('Failed to load hero cover', err);
+      }
+    };
+    loadCover();
+    return () => { cancelled = true; };
+  }, [event]);
 
   // Track visit (async, deduped via localStorage)
   useVisitTracker(event?.id);
@@ -203,7 +263,13 @@ const EventGallery = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <GalleryHeader eventName={event?.name || ''} />
+      <GalleryHeader
+        eventName={event?.name || ''}
+        location={event?.location}
+        eventDate={event?.event_date}
+        photographerName={photographerName}
+        coverUrl={coverUrl}
+      />
       <GalleryFilters
         searchCode={searchCode}
         onSearchChange={setSearchCode}
@@ -252,7 +318,7 @@ const EventGallery = () => {
           </div>
         ) : timeGroups.length <= 1 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {filteredPhotos.map((photo) => (
+            {filteredPhotos.map((photo) => (
               <PhotoCardComponent
                 key={photo.id}
                 photo={photo}

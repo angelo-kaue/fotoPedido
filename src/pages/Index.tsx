@@ -1,34 +1,127 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowRight, Calendar, ImageOff, Camera } from 'lucide-react';
-import { formatDateBR } from '@/lib/date-utils';
-import { Card, CardContent } from '@/components/ui/card';
+import { ImageOff } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import logoFotoPedido from '@/assets/logo-fotopedido.png';
+import PremiumEventCard, { PremiumEvent } from '@/components/PremiumEventCard';
 
-interface Event {
+interface RawEvent {
   id: string;
   name: string;
   slug: string;
   event_date: string | null;
+  location: string | null;
+  cover_photo_id: string | null;
 }
 
 const Index = () => {
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<PremiumEvent[]>([]);
+  const [photographerName, setPhotographerName] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      const { data } = await supabase
-        .from('events')
-        .select('id, name, slug, event_date')
-        .eq('status', 'active')
-        .order('event_date', { ascending: false });
-      setEvents(data || []);
+    const fetchAll = async () => {
+      const [eventsRes, settingsRes] = await Promise.all([
+        supabase
+          .from('events')
+          // cast: 'location' / 'cover_photo_id' are new fields not yet in generated types
+          .select('id, name, slug, event_date, location, cover_photo_id' as any)
+          .eq('status', 'active')
+          .order('event_date', { ascending: false }),
+        supabase
+          .from('photographer_settings')
+          .select('photographer_name')
+          .limit(1)
+          .single(),
+      ]);
+
+      if (settingsRes.data?.photographer_name) {
+        setPhotographerName(settingsRes.data.photographer_name);
+      }
+
+      const rawEvents = (eventsRes.data || []) as unknown as RawEvent[];
+      if (rawEvents.length === 0) {
+        setEvents([]);
+        setLoading(false);
+        return;
+      }
+
+      // For each event, resolve cover photo path:
+      // 1. cover_photo_id explicitly set, OR
+      // 2. fallback to first uploaded photo by sort_order/captured_at
+      const eventIds = rawEvents.map((e) => e.id);
+      const explicitCoverIds = rawEvents
+        .map((e) => e.cover_photo_id)
+        .filter((id): id is string => !!id);
+
+      const [explicitCoversRes, fallbackCoversRes] = await Promise.all([
+        explicitCoverIds.length > 0
+          ? supabase
+              .from('event_photos')
+              .select('id, event_id, thumbnail_path, preview_path')
+              .in('id', explicitCoverIds)
+          : Promise.resolve({ data: [] as any[] }),
+        supabase
+          .from('event_photos')
+          .select('id, event_id, thumbnail_path, preview_path, sort_order, captured_at')
+          .in('event_id', eventIds)
+          .order('sort_order', { ascending: true })
+          .order('captured_at', { ascending: true }),
+      ]);
+
+      const explicitMap = new Map<string, string>();
+      (explicitCoversRes.data || []).forEach((p: any) => {
+        // prefer the larger preview for cover quality
+        explicitMap.set(p.event_id, p.preview_path || p.thumbnail_path);
+      });
+
+      const fallbackMap = new Map<string, string>();
+      (fallbackCoversRes.data || []).forEach((p: any) => {
+        if (!fallbackMap.has(p.event_id)) {
+          fallbackMap.set(p.event_id, p.preview_path || p.thumbnail_path);
+        }
+      });
+
+      const coverPaths: string[] = [];
+      const eventCoverPath = new Map<string, string>();
+      rawEvents.forEach((ev) => {
+        const path = explicitMap.get(ev.id) || fallbackMap.get(ev.id);
+        if (path) {
+          coverPaths.push(path);
+          eventCoverPath.set(ev.id, path);
+        }
+      });
+
+      // Batch sign all cover URLs in one call (5 min TTL is plenty for listing)
+      let signedMap: Record<string, string> = {};
+      if (coverPaths.length > 0) {
+        try {
+          const { data } = await supabase.functions.invoke('get-signed-urls', {
+            body: { paths: coverPaths, expiresIn: 600 },
+          });
+          if (data?.urls) signedMap = data.urls;
+        } catch (err) {
+          console.error('Failed to sign cover urls', err);
+        }
+      }
+
+      const enriched: PremiumEvent[] = rawEvents.map((ev) => {
+        const path = eventCoverPath.get(ev.id);
+        return {
+          id: ev.id,
+          name: ev.name,
+          slug: ev.slug,
+          event_date: ev.event_date,
+          location: ev.location,
+          cover_url: path ? signedMap[path] || null : null,
+        };
+      });
+
+      setEvents(enriched);
       setLoading(false);
     };
-    fetchEvents();
+    fetchAll();
   }, []);
 
   return (
@@ -42,7 +135,6 @@ const Index = () => {
       <header className="relative border-b border-border/50 bg-card/30 backdrop-blur-xl py-14">
         <div className="container mx-auto px-4 flex flex-col items-center text-center gap-6">
           <div className="relative animate-fade-in">
-            {/* Multi-layer glow behind logo */}
             <div className="absolute inset-0 bg-primary/30 blur-[60px] rounded-full scale-[2.5]" />
             <div className="absolute inset-0 bg-primary/15 blur-[30px] rounded-full scale-[1.8]" />
             <div className="relative w-28 h-28 rounded-3xl bg-card/80 border border-border/50 shadow-2xl shadow-primary/25 flex items-center justify-center backdrop-blur-sm">
@@ -56,11 +148,11 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 flex-1">
+      <main className="container mx-auto px-4 py-10 flex-1 relative">
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-28 rounded-xl" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <Skeleton key={i} className="aspect-square rounded-xl" />
             ))}
           </div>
         ) : events.length === 0 ? (
@@ -74,34 +166,14 @@ const Index = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {events.map((event, index) => (
-              <Link key={event.id} to={`/evento/${event.slug}`}>
-                <Card className="hover:shadow-2xl hover:shadow-primary/20 hover:scale-[1.03] hover:border-primary/50 transition-all duration-300 cursor-pointer group border-border/50 bg-card/80 overflow-hidden relative animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
-                  {/* Hover glow overlay */}
-                  <div className="absolute -inset-px bg-gradient-to-br from-primary/20 via-transparent to-primary/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm" />
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <CardContent className="p-5 flex items-center justify-between gap-4 relative">
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/25 to-primary/5 flex items-center justify-center flex-shrink-0 border border-primary/15 group-hover:border-primary/40 group-hover:shadow-lg group-hover:shadow-primary/20 transition-all duration-300">
-                        <Camera className="h-6 w-6 text-primary group-hover:scale-110 transition-transform duration-300" />
-                      </div>
-                      <div className="min-w-0">
-                        <h2 className="text-lg font-bold text-foreground truncate group-hover:text-primary transition-colors duration-200">{event.name}</h2>
-                        {event.event_date && (
-                          <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-                            <Calendar className="h-3.5 w-3.5 text-primary/60" />
-                            {formatDateBR(event.event_date, { long: true })}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 group-hover:shadow-md group-hover:shadow-primary/10 transition-all duration-300">
-                      <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-200" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+              <PremiumEventCard
+                key={event.id}
+                event={event}
+                photographerName={photographerName}
+                index={index}
+              />
             ))}
           </div>
         )}

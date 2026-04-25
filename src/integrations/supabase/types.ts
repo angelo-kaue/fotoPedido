@@ -152,9 +152,11 @@ export type Database = {
       }
       events: {
         Row: {
+          cover_photo_id: string | null
           created_at: string
           event_date: string | null
           id: string
+          location: string | null
           name: string
           price_per_photo: number
           slug: string
@@ -162,9 +164,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          cover_photo_id?: string | null
           created_at?: string
           event_date?: string | null
           id?: string
+          location?: string | null
           name: string
           price_per_photo?: number
           slug: string
@@ -172,16 +176,26 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          cover_photo_id?: string | null
           created_at?: string
           event_date?: string | null
           id?: string
+          location?: string | null
           name?: string
           price_per_photo?: number
           slug?: string
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_cover_photo_id_fkey"
+            columns: ["cover_photo_id"]
+            isOneToOne: false
+            referencedRelation: "event_photos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       order_edit_history: {
         Row: {

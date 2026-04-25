@@ -18,6 +18,7 @@ const AdminEventForm = () => {
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [eventDate, setEventDate] = useState('');
+  const [location, setLocation] = useState('');
   const [pricePerPhoto, setPricePerPhoto] = useState('15.00');
   const [status, setStatus] = useState('active');
   const [saving, setSaving] = useState(false);
@@ -31,6 +32,7 @@ const AdminEventForm = () => {
           setName(data.name);
           setSlug(data.slug);
           setEventDate(data.event_date || '');
+          setLocation(((data as any).location as string) || '');
           setPricePerPhoto(String(data.price_per_photo));
           setStatus(data.status);
         }
@@ -79,9 +81,10 @@ const AdminEventForm = () => {
             name: name.trim(),
             slug: slug.trim(),
             event_date: eventDate || null,
+            location: location.trim() || null,
             price_per_photo: price,
             status,
-          })
+          } as any)
           .select('id')
           .single();
         if (error) throw error;
@@ -94,9 +97,10 @@ const AdminEventForm = () => {
             name: name.trim(),
             slug: slug.trim(),
             event_date: eventDate || null,
+            location: location.trim() || null,
             price_per_photo: price,
             status,
-          })
+          } as any)
           .eq('id', id!);
         if (error) throw error;
         toast.success('Evento atualizado!');
@@ -139,6 +143,16 @@ const AdminEventForm = () => {
             <div>
               <label className="text-sm font-medium text-foreground">Data do Evento</label>
               <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="min-h-[44px] bg-secondary/50 border-border/50 focus-visible:ring-primary" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground">Localização</label>
+              <Input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Ex: Bola Show - Futebol Society, Ubatuba - SP"
+                className="min-h-[44px] bg-secondary/50 border-border/50 focus-visible:ring-primary"
+              />
+              <p className="text-xs text-muted-foreground mt-1">Aparece nos cards públicos. Opcional.</p>
             </div>
             <div>
               <label className="text-sm font-medium text-foreground">Preço por Foto (R$)</label>

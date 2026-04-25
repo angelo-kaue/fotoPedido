@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, Trash2, AlertCircle, Image as ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Trash2, AlertCircle, Image as ImageIcon, ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -44,7 +44,40 @@ const AdminPhotoManager = ({ eventId, onPhotoDeleted }: AdminPhotoManagerProps) 
   const [deleteWarning, setDeleteWarning] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+  const [coverPhotoId, setCoverPhotoId] = useState<string | null>(null);
+  const [settingCover, setSettingCover] = useState(false);
 
+  // Load current cover photo id for this event
+  useEffect(() => {
+    const loadCover = async () => {
+      const { data } = await supabase
+        .from('events')
+        .select('cover_photo_id' as any)
+        .eq('id', eventId)
+        .maybeSingle();
+      if (data) setCoverPhotoId(((data as any).cover_photo_id as string) || null);
+    };
+    loadCover();
+  }, [eventId]);
+
+  const handleSetCover = async (photo: PhotoRow) => {
+    setSettingCover(true);
+    try {
+      const newCover = coverPhotoId === photo.id ? null : photo.id;
+      const { error } = await supabase
+        .from('events')
+        .update({ cover_photo_id: newCover } as any)
+        .eq('id', eventId);
+      if (error) throw error;
+      setCoverPhotoId(newCover);
+      toast.success(newCover ? 'Foto definida como capa do evento' : 'Capa removida');
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao definir capa');
+    } finally {
+      setSettingCover(false);
+    }
+  };
+  
   // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -208,6 +241,24 @@ const AdminPhotoManager = ({ eventId, onPhotoDeleted }: AdminPhotoManagerProps) 
                   <div className="absolute top-1 left-1 bg-foreground/70 text-background text-[10px] font-mono px-1.5 py-0.5 rounded">
                     {photo.photo_code}
                   </div>
+                  {coverPhotoId === photo.id && (
+                    <div className="absolute top-1 right-1 bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 shadow-lg">
+                      <Star className="h-3 w-3 fill-current" />
+                      CAPA
+                    </div>
+                  )}
+                  <button
+                    onClick={() => handleSetCover(photo)}
+                    disabled={settingCover}
+                    className={`absolute bottom-1 left-1 w-8 h-8 rounded-full flex items-center justify-center transition-opacity disabled:opacity-50 ${
+                      coverPhotoId === photo.id
+                        ? 'bg-primary text-primary-foreground opacity-100'
+                        : 'bg-foreground/70 text-background opacity-0 group-hover:opacity-100'
+                    }`}
+                    title={coverPhotoId === photo.id ? 'Remover como capa' : 'Definir como capa'}
+                  >
+                    <Star className={`h-4 w-4 ${coverPhotoId === photo.id ? 'fill-current' : ''}`} />
+                  </button>
                   <button
                     onClick={() => handleDeleteClick(photo)}
                     className="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-destructive/90 text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
