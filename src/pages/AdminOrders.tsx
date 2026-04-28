@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { useSignedUrls } from '@/hooks/useSignedUrls';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -31,14 +32,15 @@ interface Selection {
 }
 
 const STATUS_OPTIONS = [
-  { value: 'pendente', label: 'Pendente', color: 'bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]' },
-  { value: 'editando', label: 'Editando', color: 'bg-primary/15 text-primary' },
-  { value: 'entregue', label: 'Entregue', color: 'bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]' },
-  { value: 'cancelado', label: 'Cancelado', color: 'bg-destructive/15 text-destructive' },
+  { value: 'pendente', label: 'Pendente', color: 'bg-[hsl(var(--warning))]/12 text-[hsl(var(--warning))] border border-[hsl(var(--warning))]/30' },
+  { value: 'editando', label: 'Editando', color: 'bg-primary/12 text-primary-soft border border-primary/30' },
+  { value: 'entregue', label: 'Entregue', color: 'bg-[hsl(var(--success))]/12 text-[hsl(var(--success))] border border-[hsl(var(--success))]/30' },
+  { value: 'cancelado', label: 'Cancelado', color: 'bg-destructive/12 text-destructive border border-destructive/30' },
 ];
 
 const AdminOrders = () => {
   const navigate = useNavigate();
+  const { tenantId } = useAuth();
   const [selections, setSelections] = useState<Selection[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterEvent, setFilterEvent] = useState('all');
@@ -49,8 +51,9 @@ const AdminOrders = () => {
   const { getSignedUrl, fetchSignedUrls } = useSignedUrls();
 
   useEffect(() => {
+    if (!tenantId) return;
     const fetchData = async () => {
-      const { data: eventsData } = await supabase.from('events').select('id, name').order('name');
+      const { data: eventsData } = await supabase.from('events').select('id, name').eq('tenant_id', tenantId).order('name');
       setEvents(eventsData || []);
 
       const { data: selectionsData, error: selError } = await supabase
@@ -80,7 +83,7 @@ const AdminOrders = () => {
       setLoading(false);
     };
     fetchData();
-  }, []);
+  }, [tenantId]);
 
   const handleExpand = useCallback((selId: string, photos: PhotoDetail[]) => {
     if (expandedOrder === selId) { setExpandedOrder(null); return; }
@@ -125,7 +128,7 @@ const AdminOrders = () => {
     }
     const formatted = names.map((n) => `"${n}"`).join(' ');
     navigator.clipboard.writeText(formatted);
-    toast.success(`${names.length} nome(s) copiado(s)!`);
+    toast.success(`${names.length} nome(s) copiado(s) em formato otimizado!`);
   };
 
   const formatWhatsapp = (wa: string) => {
@@ -142,21 +145,26 @@ const AdminOrders = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b border-border/50 bg-card/60 backdrop-blur-xl py-3">
+      <header className="sticky top-0 z-40 border-b hairline bg-background/85 backdrop-blur-xl py-3">
         <div className="container mx-auto px-4 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} className="min-w-[44px] min-h-[44px] hover:bg-primary/10">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} className="min-w-[44px] min-h-[44px] hover:bg-secondary">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-bold text-foreground">Pedidos / Seleções</h1>
+          <h1 className="font-display text-xl text-foreground leading-none">Pedidos</h1>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary-soft mb-2">Operações</p>
+          <h2 className="font-display text-3xl text-foreground leading-tight">Pedidos e seleções</h2>
+        </div>
+
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <select
             value={filterEvent}
             onChange={(e) => setFilterEvent(e.target.value)}
-            className="flex min-h-[44px] rounded-xl border border-border/50 bg-secondary/50 px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary shadow-sm"
+            className="flex min-h-[44px] rounded-md border border-[hsl(var(--hairline))] bg-card px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <option value="all">Todos os eventos</option>
             {events.map((ev) => (
@@ -166,7 +174,7 @@ const AdminOrders = () => {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="flex min-h-[44px] rounded-xl border border-border/50 bg-secondary/50 px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary shadow-sm"
+            className="flex min-h-[44px] rounded-md border border-[hsl(var(--hairline))] bg-card px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <option value="all">Todos os status</option>
             <option value="pendente">Pendente</option>
@@ -179,24 +187,24 @@ const AdminOrders = () => {
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-36 rounded-xl" />
+              <Skeleton key={i} className="h-36 rounded-md" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
-              <ShoppingBag className="h-8 w-8 text-muted-foreground" />
+          <div className="flex flex-col items-center justify-center py-24 text-center border hairline rounded-md bg-card/30">
+            <div className="w-14 h-14 rounded-full border hairline bg-card flex items-center justify-center mb-5">
+              <ShoppingBag className="h-6 w-6 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-1">Nenhum pedido encontrado</h3>
+            <h3 className="font-display text-2xl text-foreground mb-2">Nenhum pedido encontrado</h3>
             <p className="text-muted-foreground text-sm">Os pedidos dos clientes aparecerão aqui.</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filtered.map((sel) => {
               const statusConfig = STATUS_OPTIONS.find((s) => s.value === sel.status);
               const isExpanded = expandedOrder === sel.id;
               return (
-                <Card key={sel.id} className="border-border/50 bg-card/80 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200">
+                <Card key={sel.id} className="surface-premium hover:border-primary/30 transition-all duration-200">
                   <CardContent className="p-5 space-y-3">
                     <div className="flex items-start justify-between">
                       <div>

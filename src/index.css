@@ -1,52 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Work+Sans:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * FotoPedido — Midnight Studio
+ * Premium photography SaaS visual identity.
+ * Black + soft white + sophisticated indigo blue.
+ * Editorial serif headings (Instrument Serif) + clean sans body (Work Sans).
+ */
+
 @layer base {
   :root {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
+    /* Surfaces — deep matte black with the tiniest blue tint */
+    --background: 230 15% 4%;
+    --foreground: 210 20% 96%;
 
-    --card: 222 40% 10%;
-    --card-foreground: 210 40% 98%;
+    --card: 230 14% 7%;
+    --card-foreground: 210 20% 96%;
 
-    --popover: 222 40% 10%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 230 16% 6%;
+    --popover-foreground: 210 20% 96%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
+    /* Primary — sophisticated royal indigo (sober, premium) */
+    --primary: 224 70% 42%;
+    --primary-foreground: 210 40% 98%;
+    --primary-soft: 224 60% 55%;
 
-    --secondary: 222 30% 16%;
-    --secondary-foreground: 210 40% 90%;
+    --secondary: 230 12% 11%;
+    --secondary-foreground: 210 20% 92%;
 
-    --muted: 222 30% 14%;
-    --muted-foreground: 215 20% 55%;
+    --muted: 230 10% 10%;
+    --muted-foreground: 220 10% 60%;
 
-    --accent: 222 30% 16%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 230 12% 12%;
+    --accent-foreground: 210 20% 96%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 70% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 222 20% 18%;
-    --input: 222 20% 18%;
-    --ring: 217 91% 60%;
+    --border: 230 10% 14%;
+    --input: 230 10% 14%;
+    --ring: 224 70% 50%;
 
-    --radius: 0.75rem;
+    --radius: 0.625rem;
 
-    --success: 142 70% 45%;
+    --success: 152 55% 42%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
+    --warning: 38 88% 52%;
     --warning-foreground: 0 0% 100%;
 
-    --sidebar-background: 222 47% 6%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 30% 14%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 222 20% 18%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-background: 230 16% 5%;
+    --sidebar-foreground: 210 20% 92%;
+    --sidebar-primary: 224 70% 50%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 230 12% 10%;
+    --sidebar-accent-foreground: 210 20% 96%;
+    --sidebar-border: 230 10% 12%;
+    --sidebar-ring: 224 70% 50%;
+
+    /* Premium tokens */
+    --hairline: 230 12% 16%;
+    --elevated: 230 12% 9%;
+    --shadow-premium: 0 1px 0 hsl(0 0% 100% / 0.04) inset, 0 24px 48px -24px hsl(0 0% 0% / 0.6);
   }
 }
 
@@ -54,13 +71,28 @@
   * {
     @apply border-border;
   }
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
   body {
-    @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    @apply bg-background text-foreground;
+    font-family: 'Work Sans', system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'ss01', 'cv11';
+    letter-spacing: -0.005em;
+  }
+
+  /* Editorial serif for premium headings — opt-in via .font-display */
+  .font-display {
+    font-family: 'Instrument Serif', 'Times New Roman', serif;
+    font-weight: 400;
+    letter-spacing: -0.02em;
   }
 }
 
 @layer utilities {
+  /* Legacy class kept for back-compat (gallery photo watermark) */
   .watermark-overlay {
     position: relative;
   }
@@ -79,12 +111,37 @@
     white-space: nowrap;
   }
 
-  .glass-card {
-    @apply bg-card/60 backdrop-blur-xl border-border/50;
+  /* Premium glass surface */
+  .surface-premium {
+    background: linear-gradient(180deg, hsl(var(--card) / 0.85), hsl(var(--card) / 0.65));
+    backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--hairline));
+    box-shadow: var(--shadow-premium);
   }
 
+  /* Subtle hairline divider */
+  .hairline {
+    border-color: hsl(var(--hairline));
+  }
+
+  /* Refined glow — much more restrained than before */
   .glow-primary {
-    box-shadow: 0 0 20px hsl(217 91% 60% / 0.15), 0 0 40px hsl(217 91% 60% / 0.05);
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.18), 0 18px 40px -20px hsl(var(--primary) / 0.45);
+  }
+
+  .ring-premium {
+    box-shadow: 0 0 0 1px hsl(var(--hairline)), 0 1px 0 hsl(0 0% 100% / 0.04) inset;
+  }
+
+  /* Premium watermark mesh — dotted diagonal lines for event card covers */
+  .watermark-mesh {
+    background-image:
+      repeating-linear-gradient(135deg, hsl(0 0% 100% / 0.10) 0 1px, transparent 1px 12px),
+      repeating-linear-gradient(45deg, hsl(0 0% 0% / 0.10) 0 1px, transparent 1px 12px);
+  }
+  .watermark-dots {
+    background-image: radial-gradient(hsl(0 0% 100% / 0.18) 1px, transparent 1px);
+    background-size: 14px 14px;
   }
 
   .scrollbar-hide {
@@ -93,5 +150,21 @@
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Premium animations */
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .animate-fade-in {
+    animation: fade-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .animate-scale-in {
+    animation: scale-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 }

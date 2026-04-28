@@ -31,6 +31,7 @@ interface Event {
   event_date: string | null;
   location: string | null;
   cover_photo_id: string | null;
+  tenant_id?: string | null;
 }
 
 const BATCH_SIZE = 200;
@@ -92,23 +93,30 @@ const EventGallery = () => {
   useEffect(() => {
     const fetchEvent = async () => {
       if (!slug) return;
-      const [{ data }, { data: settings }] = await Promise.all([
-        supabase
-          .from('events')
-          .select('id, name, slug, price_per_photo, event_date, location, cover_photo_id' as any)
-          .eq('slug', slug)
-          .eq('status', 'active')
-          .single(),
-        supabase.from('photographer_settings').select('watermark_text, photographer_name').limit(1).single(),
-      ]);
-      if (data) {
-        setEvent(data as unknown as Event);
-      } else {
+      const { data } = await supabase
+        .from('events')
+        .select('id, name, slug, price_per_photo, event_date, location, cover_photo_id, tenant_id' as any)
+        .eq('slug', slug)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (!data) {
         navigate('/');
         toast.error('Evento não encontrado');
+        return;
       }
-      if (settings?.watermark_text) setWatermarkText(settings.watermark_text);
-      if (settings?.photographer_name) setPhotographerName(settings.photographer_name);
+      setEvent(data as unknown as Event);
+
+      const ownerTenantId = (data as any).tenant_id;
+      if (ownerTenantId) {
+        const { data: settings } = await supabase
+          .from('photographer_settings')
+          .select('watermark_text, photographer_name')
+          .eq('tenant_id', ownerTenantId)
+          .maybeSingle();
+        if (settings?.watermark_text) setWatermarkText(settings.watermark_text);
+        if (settings?.photographer_name) setPhotographerName(settings.photographer_name);
+      }
     };
     fetchEvent();
   }, [slug, navigate]);

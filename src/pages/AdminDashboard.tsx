@@ -23,20 +23,23 @@ interface EventWithCount {
 }
 
 const AdminDashboard = () => {
-  const { signOut } = useAuth();
+  const { signOut, tenantId } = useAuth();
   const navigate = useNavigate();
   const [events, setEvents] = useState<EventWithCount[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!tenantId) return;
     fetchEvents();
-  }, []);
+  }, [tenantId]);
 
   const fetchEvents = async () => {
+    if (!tenantId) return;
     const { data: eventsData } = await supabase
       .from('events')
       .select('*')
+      .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false });
     if (!eventsData) { setLoading(false); return; }
 
@@ -95,82 +98,85 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b border-border/50 bg-card/60 backdrop-blur-xl py-3">
+      <header className="sticky top-0 z-40 border-b hairline bg-background/85 backdrop-blur-xl py-3">
         <div className="container mx-auto px-4 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <img src={logoFotoPedido} alt="FotoPedido" width={36} height={36} className="w-9 h-9 rounded-lg shadow-sm flex-shrink-0" />
-            <h1 className="text-lg font-bold text-foreground truncate">FotoPedido</h1>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <img src={logoFotoPedido} alt="FotoPedido" width={32} height={32} className="w-8 h-8 rounded-md flex-shrink-0" />
+            <span className="font-display text-xl text-foreground truncate leading-none">FotoPedido</span>
           </div>
-          <div className="flex gap-1.5 flex-shrink-0">
+          <div className="flex gap-1 flex-shrink-0">
             <Link to="/admin/dashboard">
-              <Button variant="outline" size="sm" className="min-h-[40px] rounded-xl border-border/50 hover:bg-primary/10 hover:border-primary/30 px-2.5 sm:px-3">
-                <BarChart3 className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Dashboard</span>
+              <Button variant="ghost" size="sm" className="min-h-[40px] rounded-md hover:bg-secondary px-2.5 sm:px-3 text-muted-foreground hover:text-foreground">
+                <BarChart3 className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline text-xs uppercase tracking-wide font-semibold">Dashboard</span>
               </Button>
             </Link>
             <Link to="/admin/atendimentos">
-              <Button variant="outline" size="sm" className="min-h-[40px] rounded-xl border-border/50 hover:bg-primary/10 hover:border-primary/30 px-2.5 sm:px-3">
-                <Users className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Atendimentos</span>
+              <Button variant="ghost" size="sm" className="min-h-[40px] rounded-md hover:bg-secondary px-2.5 sm:px-3 text-muted-foreground hover:text-foreground">
+                <Users className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline text-xs uppercase tracking-wide font-semibold">Atendimentos</span>
               </Button>
             </Link>
             <Link to="/admin/pedidos">
-              <Button variant="outline" size="sm" className="min-h-[40px] rounded-xl border-border/50 hover:bg-primary/10 hover:border-primary/30 px-2.5 sm:px-3">
-                <ShoppingCart className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Pedidos</span>
+              <Button variant="ghost" size="sm" className="min-h-[40px] rounded-md hover:bg-secondary px-2.5 sm:px-3 text-muted-foreground hover:text-foreground">
+                <ShoppingCart className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline text-xs uppercase tracking-wide font-semibold">Pedidos</span>
               </Button>
             </Link>
             <Link to="/admin/configuracoes">
-              <Button variant="outline" size="sm" className="min-h-[40px] rounded-xl border-border/50 hover:bg-primary/10 hover:border-primary/30 px-2.5 sm:px-3">
-                <Settings className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Config</span>
+              <Button variant="ghost" size="sm" className="min-h-[40px] rounded-md hover:bg-secondary px-2.5 sm:px-3 text-muted-foreground hover:text-foreground">
+                <Settings className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline text-xs uppercase tracking-wide font-semibold">Config</span>
               </Button>
             </Link>
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="min-h-[40px] hover:bg-destructive/10 hover:text-destructive px-2.5">
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="min-h-[40px] hover:bg-destructive/10 hover:text-destructive px-2.5 rounded-md">
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-foreground">Eventos</h2>
+      <main className="container mx-auto px-4 py-8 sm:py-10">
+        <div className="flex items-end justify-between mb-8">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary-soft mb-2">Gestão</p>
+            <h2 className="font-display text-3xl sm:text-4xl text-foreground leading-tight">Seus eventos</h2>
+          </div>
           <Link to="/admin/evento/novo">
-            <Button className="min-h-[44px] rounded-xl shadow-lg glow-primary bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-400">
-              <Plus className="h-4 w-4 mr-2" /> Novo Evento
+            <Button className="min-h-[44px] rounded-md bg-primary text-primary-foreground hover:bg-primary/90 ring-premium uppercase tracking-wide text-xs font-semibold px-4">
+              <Plus className="h-4 w-4 mr-2" /> Novo evento
             </Button>
           </Link>
         </div>
 
         {loading ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-24 rounded-xl" />
+              <Skeleton key={i} className="h-24 rounded-md" />
             ))}
           </div>
         ) : events.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
-              <FolderOpen className="h-8 w-8 text-muted-foreground" />
+          <div className="flex flex-col items-center justify-center py-24 text-center border hairline rounded-md bg-card/30">
+            <div className="w-14 h-14 rounded-full border hairline bg-card flex items-center justify-center mb-5">
+              <FolderOpen className="h-6 w-6 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-1">Nenhum evento criado</h3>
-            <p className="text-muted-foreground text-sm mb-4">Crie seu primeiro evento para começar.</p>
+            <h3 className="font-display text-2xl text-foreground mb-2">Nenhum evento criado</h3>
+            <p className="text-muted-foreground text-sm mb-5">Crie seu primeiro evento para começar.</p>
             <Link to="/admin/evento/novo">
-              <Button className="min-h-[44px] rounded-xl bg-gradient-to-r from-primary to-blue-500">
-                <Plus className="h-4 w-4 mr-2" /> Criar Primeiro Evento
+              <Button className="min-h-[44px] rounded-md bg-primary text-primary-foreground hover:bg-primary/90 uppercase tracking-wide text-xs font-semibold">
+                <Plus className="h-4 w-4 mr-2" /> Criar primeiro evento
               </Button>
             </Link>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {events.map((event) => (
               <Link key={event.id} to={`/admin/evento/${event.id}`}>
-                <Card className="hover:shadow-xl hover:shadow-primary/10 hover:scale-[1.01] hover:border-primary/30 transition-all duration-300 cursor-pointer mb-3 border-border/50 bg-card/80 group">
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/25 to-primary/5 flex items-center justify-center flex-shrink-0 border border-primary/15 group-hover:border-primary/40 group-hover:shadow-md group-hover:shadow-primary/15 transition-all duration-300">
-                        <Camera className="h-5 w-5 text-primary" />
+                <Card className="surface-premium hover:border-primary/40 transition-all duration-300 cursor-pointer mb-2.5 group">
+                  <CardContent className="p-4 sm:p-5 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0 border border-primary/20 group-hover:border-primary/40 transition-all duration-300">
+                        <Camera className="h-5 w-5 text-primary-soft" />
                       </div>
                       <div className="min-w-0">
-                        <h3 className="font-bold text-foreground truncate">{event.name}</h3>
-                        <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground flex-wrap">
+                        <h3 className="font-display text-xl text-foreground truncate leading-tight">{event.name}</h3>
+                        <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground flex-wrap uppercase tracking-[0.12em] font-medium">
                           {event.event_date && (
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
@@ -189,7 +195,7 @@ const AdminDashboard = () => {
                           {event.visit_count > 0 && (() => {
                             const rate = (event.selection_count / event.visit_count) * 100;
                             const display = rate % 1 === 0 ? rate.toFixed(0) : rate.toFixed(1);
-                            const color = rate >= 10 ? 'text-green-400' : rate >= 5 ? 'text-yellow-400' : 'text-red-400';
+                            const color = rate >= 10 ? 'text-[hsl(var(--success))]' : rate >= 5 ? 'text-[hsl(var(--warning))]' : 'text-destructive';
                             return (
                               <span className={`flex items-center gap-1 font-semibold ${color}`}>
                                 <TrendingUp className="h-3 w-3" />
@@ -200,21 +206,21 @@ const AdminDashboard = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                        className="h-9 w-9 hover:bg-destructive/10 hover:text-destructive rounded-md"
                         onClick={(e) => handleDeleteEvent(e, event)}
                         disabled={deleting === event.id}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                       <span
-                        className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                        className={`text-[10px] px-2.5 py-1 rounded-sm font-semibold uppercase tracking-[0.16em] ${
                           event.status === 'active'
-                            ? 'bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]'
-                            : 'bg-muted text-muted-foreground'
+                            ? 'bg-[hsl(var(--success))]/12 text-[hsl(var(--success))] border border-[hsl(var(--success))]/25'
+                            : 'bg-secondary text-muted-foreground border hairline'
                         }`}
                       >
                         {event.status === 'active' ? 'Ativo' : 'Inativo'}

@@ -92,7 +92,7 @@ const BulkPhotoUploader = ({ eventId, existingPhotoCount, onUploadComplete }: Bu
         sort_order: photoIndex,
         captured_at: capturedAt || new Date().toISOString(),
                 filename: item.file.name,
-      });
+      } as any);
 
       if (dbError) throw new Error(dbError.message);
 

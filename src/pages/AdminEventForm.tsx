@@ -142,7 +142,20 @@ const AdminEventForm = () => {
             </div>
             <div>
               <label className="text-sm font-medium text-foreground">Data do Evento</label>
-              <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="min-h-[44px] bg-secondary/50 border-border/50 focus-visible:ring-primary" />
+              <Input
+                type="date"
+                value={eventDate}
+                onChange={(e) => setEventDate(e.target.value)}
+                onClick={(e) => {
+                  const el = e.currentTarget as HTMLInputElement & { showPicker?: () => void };
+                  el.showPicker?.();
+                }}
+                onFocus={(e) => {
+                  const el = e.currentTarget as HTMLInputElement & { showPicker?: () => void };
+                  el.showPicker?.();
+                }}
+                className="min-h-[44px] w-full bg-secondary/50 border-border/50 focus-visible:ring-primary cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100"
+              />
             </div>
             <div>
               <label className="text-sm font-medium text-foreground">Localização</label>

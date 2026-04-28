@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isAdmin: boolean;
+  tenantId: string | null;
   loading: boolean;
   signIn: (email: string, password: string, captchaToken?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -17,14 +18,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [tenantId, setTenantId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const checkAdmin = async (userId: string) => {
-    const { data } = await supabase.rpc('has_role', {
-      _user_id: userId,
-      _role: 'admin',
-    });
-    setIsAdmin(!!data);
+  const resolveAdminAndTenant = async (userId: string) => {
+    const [{ data: roleData }, { data: tenantData }] = await Promise.all([
+      supabase.rpc('has_role', { _user_id: userId, _role: 'admin' }),
+      supabase
+        .from('user_roles')
+        .select('tenant_id')
+        .eq('user_id', userId)
+        .eq('role', 'admin')
+        .maybeSingle(),
+    ]);
+    setIsAdmin(!!roleData);
+    setTenantId((tenantData as any)?.tenant_id ?? null);
   };
 
   useEffect(() => {
@@ -33,9 +41,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          setTimeout(() => checkAdmin(session.user.id), 0);
+          setTimeout(() => resolveAdminAndTenant(session.user.id), 0);
         } else {
           setIsAdmin(false);
+          setTenantId(null);
         }
         setLoading(false);
       }
@@ -45,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        checkAdmin(session.user.id);
+        resolveAdminAndTenant(session.user.id);
       }
       setLoading(false);
     });
@@ -67,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isAdmin, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, isAdmin, tenantId, loading, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

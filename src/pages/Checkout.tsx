@@ -12,6 +12,7 @@ interface Event {
   name: string;
   slug: string;
   price_per_photo: number;
+  tenant_id: string;
 }
 
 interface PhotoCode {
@@ -56,12 +57,23 @@ const Checkout = () => {
   useEffect(() => {
     const fetchEvent = async () => {
       if (!slug) return;
-      const [{ data: eventData }, { data: settings }] = await Promise.all([
-        supabase.from('events').select('id, name, slug, price_per_photo').eq('slug', slug).eq('status', 'active').single(),
-        supabase.from('photographer_settings').select('whatsapp_number').limit(1).single(),
-      ]);
+      const { data: eventData } = await supabase
+        .from('events')
+        .select('id, name, slug, price_per_photo, tenant_id' as any)
+        .eq('slug', slug)
+        .eq('status', 'active')
+        .single();
+
       if (!eventData) { navigate('/'); return; }
-      setEvent(eventData);
+      const ev = eventData as unknown as Event;
+      setEvent(ev);
+
+      // Fetch the WhatsApp of the photographer (tenant) who owns this event
+      const { data: settings } = await supabase
+        .from('photographer_settings')
+        .select('whatsapp_number')
+        .eq('tenant_id', ev.tenant_id)
+        .maybeSingle();
       if (settings?.whatsapp_number) setPhotographerWa(settings.whatsapp_number);
 
       const saved = localStorage.getItem(`selection_${slug}`);
@@ -109,14 +121,14 @@ const Checkout = () => {
           customer_name: customerName.trim(),
           total_photos: selectedPhotos.length,
           total_price: totalPrice,
-        })
+        } as any)
         .select('id')
         .single();
       if (selError) throw selError;
       if (!selection?.id) throw new Error('Falha ao criar selecao');
 
       const photoRows = selectedPhotos.map((p) => ({ selection_id: selection.id, photo_id: p.id }));
-      const { error: photosError } = await supabase.from('selection_photos').insert(photoRows);
+      const { error: photosError } = await supabase.from('selection_photos').insert(photoRows as any);
       if (photosError) throw photosError;
 
       localStorage.removeItem(`selection_${slug}`);
@@ -156,26 +168,26 @@ const Checkout = () => {
 
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md text-center shadow-xl border-border/50 bg-card/80">
-          <CardContent className="p-8">
-            <div className="w-20 h-20 rounded-full bg-primary/15 flex items-center justify-center mx-auto mb-6 animate-scale-in glow-primary">
-              <Check className="h-10 w-10 text-primary" />
+        <Card className="w-full max-w-md text-center surface-premium">
+          <CardContent className="p-10">
+            <div className="w-20 h-20 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center mx-auto mb-6 animate-scale-in">
+              <Check className="h-10 w-10 text-primary-soft" />
             </div>
-            <h2 className="text-2xl font-bold text-foreground mb-2">Selecao Enviada!</h2>
-            <p className="text-muted-foreground mb-8">
-              {`Suas ${selectedPhotos.length} fotos foram registradas. O fotografo entrara em contato pelo WhatsApp.`}
+            <h2 className="font-display text-3xl text-foreground mb-3">Seleção enviada</h2>
+            <p className="text-muted-foreground mb-8 text-sm leading-relaxed">
+              {`Suas ${selectedPhotos.length} fotos foram registradas. O fotógrafo entrará em contato pelo WhatsApp.`}
             </p>
             <div className="space-y-3">
               <Button
                 onClick={() => { window.location.href = waUrl; }}
                 variant="outline"
-                className="w-full min-h-[48px] border-border/50"
+                className="w-full min-h-[48px] border-[hsl(var(--hairline))] hover:bg-secondary"
               >
                 <MessageCircle className="h-5 w-5 mr-2" />
                 Abrir WhatsApp novamente
               </Button>
               <Button onClick={() => navigate('/')} variant="ghost" className="w-full min-h-[48px]">
-                Voltar ao Inicio
+                Voltar ao início
               </Button>
             </div>
           </CardContent>
@@ -186,78 +198,80 @@ const Checkout = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b border-border/50 bg-card/60 backdrop-blur-xl py-4">
+      <header className="sticky top-0 z-40 border-b hairline bg-background/85 backdrop-blur-xl py-4">
         <div className="container mx-auto px-4 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(`/evento/${slug}`)} className="hover:bg-primary/10">
+          <Button variant="ghost" size="icon" onClick={() => navigate(`/evento/${slug}`)} className="hover:bg-secondary">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-bold text-foreground">Finalizar Selecao</h1>
+          <h1 className="font-display text-xl text-foreground leading-none">Finalizar seleção</h1>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 max-w-lg space-y-6">
-        <Card className="shadow-lg border-border/50 bg-card/80">
+      <main className="container mx-auto px-4 py-8 max-w-lg space-y-5">
+        <Card className="surface-premium">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Resumo do Pedido</CardTitle>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary-soft">Resumo</p>
+            <CardTitle className="font-display text-2xl text-foreground">Seu pedido</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5">
             <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Evento</p>
-              <p className="font-semibold text-foreground text-lg">{event.name}</p>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em]">Evento</p>
+              <p className="font-display text-xl text-foreground mt-1">{event.name}</p>
             </div>
             <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em] mb-2">
                 Fotos selecionadas ({selectedPhotos.length})
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {selectedPhotos.map((p) => (
-                  <span key={p.id} className="bg-primary/15 text-primary text-xs font-mono px-2.5 py-1 rounded-full">
+                  <span key={p.id} className="bg-secondary text-foreground border hairline text-[11px] font-mono font-semibold px-2.5 py-1 rounded-sm tracking-wider">
                     {p.photo_code}
                   </span>
                 ))}
               </div>
             </div>
-            <div className="border-t border-border/50 pt-4 flex justify-between items-center">
-              <span className="text-muted-foreground font-medium">Valor total</span>
-              <span className="text-3xl font-bold text-primary">
+            <div className="border-t hairline pt-4 flex justify-between items-end">
+              <span className="text-[10px] text-muted-foreground uppercase tracking-[0.22em] font-semibold">Valor total</span>
+              <span className="font-display text-4xl text-primary-soft leading-none">
                 R$ {totalPrice.toFixed(2).replace('.', ',')}
               </span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="shadow-lg border-border/50 bg-card/80">
+        <Card className="surface-premium">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Seus Dados</CardTitle>
-            <p className="text-sm text-muted-foreground">Informe seus dados para o fotografo entrar em contato.</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary-soft">Contato</p>
+            <CardTitle className="font-display text-2xl text-foreground">Seus dados</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">Para o fotógrafo entrar em contato.</p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="text"
                 placeholder="Seu nome completo"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 maxLength={100}
-                className="min-h-[52px] text-lg pl-10 bg-secondary/50 border-border/50 focus-visible:ring-primary"
+                className="min-h-[52px] text-base pl-10 bg-background border-[hsl(var(--hairline))] focus-visible:ring-primary"
               />
             </div>
             <div className="relative">
-              <MessageCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <MessageCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="tel"
                 placeholder="(11) 99999-9999"
                 value={whatsapp}
                 onChange={handleWhatsappChange}
                 maxLength={16}
-                className="min-h-[52px] text-lg pl-10 bg-secondary/50 border-border/50 focus-visible:ring-primary"
+                className="min-h-[52px] text-base pl-10 bg-background border-[hsl(var(--hairline))] focus-visible:ring-primary"
               />
             </div>
             <Button
               onClick={handleSubmit}
               disabled={sending || getCleanWhatsapp().length < 10 || !customerName.trim()}
-              className="w-full min-h-[52px] text-base font-semibold bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-400 transition-all duration-200 shadow-lg glow-primary"
+              className="w-full min-h-[52px] text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 ring-premium tracking-wide uppercase"
             >
               {sending ? (
                 <>
@@ -266,7 +280,7 @@ const Checkout = () => {
                 </>
               ) : (
                 <>
-                  <Send className="h-5 w-5 mr-2" />
+                  <Send className="h-4 w-4 mr-2" />
                   Enviar via WhatsApp
                 </>
               )}
