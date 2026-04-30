@@ -115,11 +115,13 @@ const PremiumEventCard = ({ event, photographerName, index = 0 }: Props) => {
         <h2 className="font-display text-xl sm:text-2xl text-foreground leading-[1.05] line-clamp-2 group-hover:text-primary-soft transition-colors">
           {event.name}
         </h2>
-        <div className="mt-1.5 flex items-center gap-3 text-[11px] text-muted-foreground uppercase tracking-[0.14em] font-medium">
+        <div className="mt-1.5 flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3 text-[11px] text-muted-foreground uppercase tracking-[0.14em] font-medium">
           {event.location && (
-            <span className="flex items-center gap-1 min-w-0">
-              <MapPin className="h-3 w-3 text-primary/80 flex-shrink-0" />
-              <span className="truncate">{event.location}</span>
+            <span className="flex items-start gap-1 min-w-0 max-w-full">
+              <MapPin className="h-3 w-3 mt-[2px] text-primary/80 flex-shrink-0" />
+              <span className="break-words leading-snug line-clamp-2 sm:line-clamp-1 sm:truncate">
+                {event.location}
+              </span>
             </span>
           )}
           {dateLabel && (

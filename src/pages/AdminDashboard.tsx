@@ -9,6 +9,7 @@ import { Plus, LogOut, Image, ShoppingCart, Calendar, Settings, ChevronRight, Fo
 import { formatDateBR } from '@/lib/date-utils';
 import { toast } from 'sonner';
 import logoFotoPedido from '@/assets/logo-fotopedido.png';
+import PerformanceChart from '@/components/admin/PerformanceChart';
 
 interface EventWithCount {
   id: string;
@@ -133,6 +134,10 @@ const AdminDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 sm:py-10">
+        <div className="mb-10">
+          <PerformanceChart tenantId={tenantId} />
+        </div>
+
         <div className="flex items-end justify-between mb-8">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary-soft mb-2">Gestão</p>

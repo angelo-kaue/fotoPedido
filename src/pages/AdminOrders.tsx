@@ -32,10 +32,30 @@ interface Selection {
 }
 
 const STATUS_OPTIONS = [
-  { value: 'pendente', label: 'Pendente', color: 'bg-[hsl(var(--warning))]/12 text-[hsl(var(--warning))] border border-[hsl(var(--warning))]/30' },
-  { value: 'editando', label: 'Editando', color: 'bg-primary/12 text-primary-soft border border-primary/30' },
-  { value: 'entregue', label: 'Entregue', color: 'bg-[hsl(var(--success))]/12 text-[hsl(var(--success))] border border-[hsl(var(--success))]/30' },
-  { value: 'cancelado', label: 'Cancelado', color: 'bg-destructive/12 text-destructive border border-destructive/30' },
+  {
+    value: 'pendente',
+    label: 'Pendente',
+    color: 'bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))] border border-[hsl(var(--warning))]/40 hover:bg-[hsl(var(--warning))]/25',
+    dot: 'bg-[hsl(var(--warning))]',
+  },
+  {
+    value: 'editando',
+    label: 'Editando',
+    color: 'bg-primary/20 text-primary-soft border border-primary/40 hover:bg-primary/30',
+    dot: 'bg-primary',
+  },
+  {
+    value: 'entregue',
+    label: 'Entregue',
+    color: 'bg-[hsl(var(--success))]/15 text-[hsl(var(--success))] border border-[hsl(var(--success))]/40 hover:bg-[hsl(var(--success))]/25',
+    dot: 'bg-[hsl(var(--success))]',
+  },
+  {
+    value: 'cancelado',
+    label: 'Cancelado',
+    color: 'bg-destructive/15 text-destructive border border-destructive/40 hover:bg-destructive/25',
+    dot: 'bg-destructive',
+  },
 ];
 
 const AdminOrders = () => {
@@ -222,15 +242,29 @@ const AdminOrders = () => {
                           })}
                         </p>
                       </div>
-                      <select
-                        value={sel.status}
-                        onChange={(e) => updateStatus(sel.id, e.target.value)}
-                        className={`text-xs font-semibold px-3 py-1.5 rounded-full border-0 cursor-pointer ${statusConfig?.color || ''}`}
-                      >
-                        {STATUS_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>{opt.label}</option>
-                        ))}
-                      </select>
+                      <div className={`relative inline-flex items-center gap-2 rounded-full pl-3 pr-2 py-1.5 transition-colors ${statusConfig?.color || ''}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${statusConfig?.dot || 'bg-foreground'}`} />
+                        <select
+                          value={sel.status}
+                          onChange={(e) => updateStatus(sel.id, e.target.value)}
+                          className="appearance-none bg-transparent border-0 outline-none text-xs font-semibold uppercase tracking-wider cursor-pointer pr-5 focus:ring-0"
+                          style={{ color: 'inherit' }}
+                        >
+                          {STATUS_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value} className="bg-card text-foreground font-medium normal-case tracking-normal">
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                        <svg
+                          aria-hidden
+                          className="pointer-events-none absolute right-2 h-3 w-3 opacity-70"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                        </svg>
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-2 text-sm">
