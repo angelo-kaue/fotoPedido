@@ -21,6 +21,7 @@ const AdminEventForm = () => {
   const [location, setLocation] = useState('');
   const [pricePerPhoto, setPricePerPhoto] = useState('15.00');
   const [status, setStatus] = useState('active');
+  const [paymentMode, setPaymentMode] = useState<'whatsapp' | 'pix_manual'>('whatsapp');
   const [saving, setSaving] = useState(false);
   const [existingPhotoCount, setExistingPhotoCount] = useState(0);
 
@@ -35,6 +36,7 @@ const AdminEventForm = () => {
           setLocation(((data as any).location as string) || '');
           setPricePerPhoto(String(data.price_per_photo));
           setStatus(data.status);
+          setPaymentMode(((data as any).payment_mode as 'whatsapp' | 'pix_manual') || 'whatsapp');
         }
 
         const { count } = await supabase
@@ -84,6 +86,7 @@ const AdminEventForm = () => {
             location: location.trim() || null,
             price_per_photo: price,
             status,
+            payment_mode: paymentMode,
           } as any)
           .select('id')
           .single();
@@ -100,6 +103,7 @@ const AdminEventForm = () => {
             location: location.trim() || null,
             price_per_photo: price,
             status,
+            payment_mode: paymentMode,
           } as any)
           .eq('id', id!);
         if (error) throw error;
@@ -181,6 +185,27 @@ const AdminEventForm = () => {
                 <option value="active">Ativo</option>
                 <option value="inactive">Inativo</option>
               </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground">Modo de pagamento</label>
+              <div className="grid grid-cols-2 gap-2 mt-1.5">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMode('whatsapp')}
+                  className={`min-h-[56px] rounded-md border px-3 py-2 text-left transition-colors ${paymentMode === 'whatsapp' ? 'border-primary bg-primary/10' : 'border-border/50 bg-secondary/50 hover:border-primary/40'}`}
+                >
+                  <p className="text-sm font-semibold text-foreground">WhatsApp</p>
+                  <p className="text-[11px] text-muted-foreground leading-tight">Cliente é direcionado ao WhatsApp.</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMode('pix_manual')}
+                  className={`min-h-[56px] rounded-md border px-3 py-2 text-left transition-colors ${paymentMode === 'pix_manual' ? 'border-primary bg-primary/10' : 'border-border/50 bg-secondary/50 hover:border-primary/40'}`}
+                >
+                  <p className="text-sm font-semibold text-foreground">PIX manual</p>
+                  <p className="text-[11px] text-muted-foreground leading-tight">PIX + comprovante + aprovação.</p>
+                </button>
+              </div>
             </div>
             <Button onClick={handleSave} disabled={saving} className="w-full min-h-[44px] bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-400 glow-primary">
               <Save className="h-4 w-4 mr-2" />

@@ -188,6 +188,7 @@ export type Database = {
           id: string
           location: string | null
           name: string
+          payment_mode: string
           price_per_photo: number
           slug: string
           status: string
@@ -201,6 +202,7 @@ export type Database = {
           id?: string
           location?: string | null
           name: string
+          payment_mode?: string
           price_per_photo?: number
           slug: string
           status?: string
@@ -214,6 +216,7 @@ export type Database = {
           id?: string
           location?: string | null
           name?: string
+          payment_mode?: string
           price_per_photo?: number
           slug?: string
           status?: string
@@ -300,12 +303,45 @@ export type Database = {
           },
         ]
       }
+      payment_proofs: {
+        Row: {
+          created_at: string
+          file_path: string
+          id: string
+          original_filename: string | null
+          selection_id: string
+          status: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          id?: string
+          original_filename?: string | null
+          selection_id: string
+          status?: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          id?: string
+          original_filename?: string | null
+          selection_id?: string
+          status?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
       photographer_settings: {
         Row: {
           created_at: string
           default_price_per_photo: number
           id: string
           photographer_name: string
+          pix_key: string
+          pix_qrcode_url: string
+          pix_recipient_name: string
           tenant_id: string
           updated_at: string
           watermark_text: string
@@ -316,6 +352,9 @@ export type Database = {
           default_price_per_photo?: number
           id?: string
           photographer_name?: string
+          pix_key?: string
+          pix_qrcode_url?: string
+          pix_recipient_name?: string
           tenant_id: string
           updated_at?: string
           watermark_text?: string
@@ -326,6 +365,9 @@ export type Database = {
           default_price_per_photo?: number
           id?: string
           photographer_name?: string
+          pix_key?: string
+          pix_qrcode_url?: string
+          pix_recipient_name?: string
           tenant_id?: string
           updated_at?: string
           watermark_text?: string
@@ -388,8 +430,14 @@ export type Database = {
         Row: {
           created_at: string
           customer_name: string
+          download_enabled: boolean
+          download_expires_at: string | null
           event_id: string
           id: string
+          payment_approved_at: string | null
+          payment_method: string
+          payment_status: string
+          public_token: string
           status: string
           tenant_id: string
           total_photos: number
@@ -400,8 +448,14 @@ export type Database = {
         Insert: {
           created_at?: string
           customer_name?: string
+          download_enabled?: boolean
+          download_expires_at?: string | null
           event_id: string
           id?: string
+          payment_approved_at?: string | null
+          payment_method?: string
+          payment_status?: string
+          public_token?: string
           status?: string
           tenant_id: string
           total_photos?: number
@@ -412,8 +466,14 @@ export type Database = {
         Update: {
           created_at?: string
           customer_name?: string
+          download_enabled?: boolean
+          download_expires_at?: string | null
           event_id?: string
           id?: string
+          payment_approved_at?: string | null
+          payment_method?: string
+          payment_status?: string
+          public_token?: string
           status?: string
           tenant_id?: string
           total_photos?: number

@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import EventGallery from "./pages/EventGallery";
 import Checkout from "./pages/Checkout";
+import PublicOrder from "./pages/PublicOrder";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminDashboardAnalytics from "./pages/AdminDashboardAnalytics";
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/evento/:slug" element={<EventGallery />} />
             <Route path="/evento/:slug/finalizar" element={<Checkout />} />
+            <Route path="/order/:token" element={<PublicOrder />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />

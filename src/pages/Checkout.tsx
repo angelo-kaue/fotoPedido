@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Send, Check, Loader2, MessageCircle, User } from 'lucide-react';
+import { ArrowLeft, Send, Check, Loader2, MessageCircle, User, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Event {
@@ -13,6 +13,7 @@ interface Event {
   slug: string;
   price_per_photo: number;
   tenant_id: string;
+  payment_mode?: string;
 }
 
 interface PhotoCode {
@@ -59,7 +60,7 @@ const Checkout = () => {
       if (!slug) return;
       const { data: eventData } = await supabase
         .from('events')
-        .select('id, name, slug, price_per_photo, tenant_id' as any)
+        .select('id, name, slug, price_per_photo, tenant_id, payment_mode' as any)
         .eq('slug', slug)
         .eq('status', 'active')
         .single();
@@ -113,6 +114,7 @@ const Checkout = () => {
 
     setSending(true);
     try {
+      const isPix = event.payment_mode === 'pix_manual';
       const { data: selection, error: selError } = await supabase
         .from('selections')
         .insert({
@@ -121,28 +123,35 @@ const Checkout = () => {
           customer_name: customerName.trim(),
           total_photos: selectedPhotos.length,
           total_price: totalPrice,
+          payment_method: isPix ? 'pix_manual' : 'whatsapp',
         } as any)
-        .select('id')
+        .select('id, public_token' as any)
         .single();
+      const sel = selection as any;
       if (selError) throw selError;
-      if (!selection?.id) throw new Error('Falha ao criar selecao');
+      if (!sel?.id) throw new Error('Falha ao criar selecao');
 
-      const photoRows = selectedPhotos.map((p) => ({ selection_id: selection.id, photo_id: p.id }));
+      const photoRows = selectedPhotos.map((p) => ({ selection_id: sel.id, photo_id: p.id }));
       const { error: photosError } = await supabase.from('selection_photos').insert(photoRows as any);
       if (photosError) throw photosError;
 
       localStorage.removeItem(`selection_${slug}`);
 
+      // PIX manual flow → redirect to public order page
+      if (isPix && sel.public_token) {
+        toast.success('Selecao registrada! Finalize com o pagamento.');
+        navigate(`/order/${sel.public_token}`);
+        return;
+      }
+
+      // WhatsApp flow (default)
       const codes = selectedPhotos.map((p) => p.photo_code);
       const message = buildMessage(customerName.trim(), event.name, codes, totalPrice, formatWhatsapp(cleanWa));
-
       const targetWa = photographerWa || cleanWa;
       const waUrl = buildWhatsAppUrl(targetWa, message);
 
       setSent(true);
       toast.success('Selecao salva com sucesso!');
-
-      // Redirect immediately via location.href for mobile compatibility
       window.location.href = waUrl;
     } catch (error) {
       toast.error('Erro ao salvar selecao. Tente novamente.');
@@ -276,7 +285,12 @@ const Checkout = () => {
               {sending ? (
                 <>
                   <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                  Enviando...
+                  {event.payment_mode === 'pix_manual' ? 'Processando…' : 'Enviando...'}
+                </>
+              ) : event.payment_mode === 'pix_manual' ? (
+                <>
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Continuar para pagamento
                 </>
               ) : (
                 <>
