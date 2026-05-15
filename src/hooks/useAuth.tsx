@@ -72,6 +72,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+     try {
+      const token = localStorage.getItem('fp_push_token_v1');
+      if (token) {
+        await supabase.from('admin_push_tokens').delete().eq('token', token);
+        localStorage.removeItem('fp_push_token_v1');
+      }
+    } catch {}
     await supabase.auth.signOut();
   };
 

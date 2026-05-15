@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Save, Lock, Upload, X, ImageIcon, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRef } from 'react';
+import PushNotificationsCard from '@/components/admin/PushNotificationsCard';
 
 const AdminSettings = () => {
   const navigate = useNavigate();
@@ -169,6 +170,8 @@ const AdminSettings = () => {
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary-soft mb-2">Conta</p>
           <h2 className="font-display text-3xl text-foreground leading-tight">Identidade do estúdio</h2>
         </div>
+
+        <PushNotificationsCard />
 
         <Card className="surface-premium">
           <CardHeader>
