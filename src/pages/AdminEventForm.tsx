@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import BulkPhotoUploader from '@/components/BulkPhotoUploader';
 import AdminPhotoManager from '@/components/admin/AdminPhotoManager';
 import EventShareSection from '@/components/admin/EventShareSection';
+import EventPromoCard from '@/components/admin/EventPromoCard';
 
 const AdminEventForm = () => {
   const { id } = useParams<{ id: string }>();
@@ -226,6 +227,15 @@ const AdminEventForm = () => {
               onPhotoDeleted={() => setExistingPhotoCount(prev => Math.max(0, prev - 1))}
             />
             {slug && <EventShareSection slug={slug} />}
+            {slug && id && (
+              <EventPromoCard
+                slug={slug}
+                eventId={id}
+                eventName={name}
+                eventDate={eventDate}
+                location={location}
+              />
+            )}
           </>
         )}
       </main>

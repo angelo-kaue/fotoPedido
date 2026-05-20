@@ -598,6 +598,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _notify_admin_push: {
+        Args: {
+          p_body: string
+          p_tag: string
+          p_tenant: string
+          p_title: string
+          p_url: string
+        }
+        Returns: undefined
+      }
       get_my_tenant_id: { Args: never; Returns: string }
       has_role: {
         Args: {
